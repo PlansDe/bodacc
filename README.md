@@ -7,7 +7,8 @@ scanne le bodacc pour y trouver les annonces / statuts des PSE qui à procédure
 - installer l'extension devcontainer
 - ouvrir le dossier dans un conteneur (open locally + CTRL MAJ P -> remote containers)
 - create a sqlite table with scheme
-    ``` create table annonces(
+    ``` 
+   create table annonces(
    ...> ID INT PRIMARY KEY NOT NULL,
    ...> NUMERO TEXT,
    ...> DATE TEXT,
