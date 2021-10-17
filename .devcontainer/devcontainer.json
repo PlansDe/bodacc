@@ -21,8 +21,8 @@
         "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" //Make possible to use docker in docker
     ],
     // Vscode docker options
-    "workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind,consistency=delegated", //Change workspace folder to reflect host tree structure
-    "workspaceFolder": "${localWorkspaceFolder}", //Change workspace folder to reflect host tree structure
+    "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=delegated",
+    "workspaceFolder": "/app",
     "initializeCommand": "docker network create vscode_net || true", // Create network for docker
     // VSCODE settings
     "settings": {
