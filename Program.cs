@@ -159,6 +159,8 @@ namespace bodacc
                     DBProcessFile(file, connection, year, ref ID);
                 }
             }
+
+            Console.WriteLine("\r year {0} done", year);
         }
 
         static void DecompressOld(String directory)
@@ -212,8 +214,8 @@ namespace bodacc
             {
                 var command = connection.CreateCommand();
                 command.CommandText = @"
-                                INSERT INTO annonces (ID, NUMERO, DATE, CODEPOSTAL, VILLE, NATURE, RCS, TYPE, PREVIOUS, COMPLEMENT)
-                                VALUES (@ID,@Numero,@Date,@CodePostal,@Ville,@Nature,@Rcs,@Type,@Previous,@Complement)
+                                INSERT INTO annonces (ID, NUMERO, DATE, CODEPOSTAL,VILLE,NATURE,RCS,TYPE,FORMEJURIDIQUE)
+                                VALUES (@ID,@Numero,@Date,@CodePostal,@Ville,@Nature,@Rcs,@Type,@FormeJuridique)
                             ";
 
                 var idParam = new SqliteParameter();
@@ -240,12 +242,9 @@ namespace bodacc
                 var typeParam = new SqliteParameter();
                 typeParam.ParameterName = "@Type";
                 command.Parameters.Add(typeParam);
-                var previousParam = new SqliteParameter();
-                previousParam.ParameterName = "@Previous";
-                command.Parameters.Add(previousParam);
-                var complementParam = new SqliteParameter();
-                complementParam.ParameterName = "@Complement";
-                command.Parameters.Add(complementParam);
+                var formeParam = new SqliteParameter();
+                formeParam.ParameterName = "@FormeJuridique";
+                command.Parameters.Add(formeParam);
 
                 XmlSerializer serializer = new XmlSerializer(typeof(PCL_REDIFF));
 
@@ -272,25 +271,56 @@ namespace bodacc
                             var france = annonce.Adresse.First().France;
                             if (france != null)
                             {
-                                codePostal = annonce.Adresse.First().France.CodePostal;
-                                ville = annonce.Adresse.First().France.Ville;
+                                if (france.CodePostal != null)
+                                    codePostal = annonce.Adresse.First().France.CodePostal;
+                                if (france.Ville != null)
+                                    ville = france.Ville;
                             }
                         }
+
                         var rcs = annonce.NumeroImmatriculation.Any() ? annonce.NumeroImmatriculation.First().NumeroIdentificationRCS : "non inscrit";
                         var previous = annonce.ParutionAvisPrecedent == null ? "" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
                         var type = annonce.TypeAnnonce.Creation != null ? "creation" :
                                        (annonce.TypeAnnonce.Rectificatif != null ? "rectificatif" : "");
 
                         var date = "";
+                        var french = CultureInfo.GetCultureInfo("fr-FR");
+                        var styles = DateTimeStyles.AllowInnerWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite;
                         if (annonce.Jugement != null && !String.IsNullOrWhiteSpace(annonce.Jugement.Date))
                         {
-                            date = annonce.Jugement.Date;
+                            date = "";
+                            var input = annonce.Jugement.Date
+                                .Replace("1er", "1")
+                                .Replace('\u00ef', ' ')
+                                .Replace('\u00bf', ' ')
+                                .Replace('\u00bd', ' ')
+                                .Replace("f   evrier", "février")
+                                .Replace("ao   t", "août")
+                                .Replace("d   cembre", "décembre");
+                            DateTime parsed_date;
+                            if (!DateTime.TryParseExact(input, "yyyy-mm-dd", CultureInfo.InvariantCulture, styles, out parsed_date))
+                            {
+                                if (!DateTime.TryParseExact(input, "d MMMM yyyy", french, styles, out parsed_date))
+                                {
+                                    Console.WriteLine("cannot parse date : " + annonce.Jugement.Date);
+                                }
+                            }
+
+                            date = parsed_date.ToString("yyyy-MM-dd");
                         }
-                        var nature = annonce.Jugement != null ? annonce.Jugement.Nature : "";
-                        var complement = "";
-                        if (annonce.Jugement != null && annonce.Jugement.ComplementJugement != null)
+
+                        var nature = "";
+                        if (annonce.Jugement != null && annonce.Jugement.Nature != null)
                         {
-                            complement = annonce.Jugement.ComplementJugement;
+                            if (annonce.Jugement.Nature != null)
+                                nature = annonce.Jugement.Nature;
+                        }
+
+                        var forme = "";
+                        if (annonce.PersonneMorale != null && annonce.PersonneMorale.Any())
+                        {
+                            if (annonce.PersonneMorale.First().FormeJuridique != null)
+                                forme = annonce.PersonneMorale.First().FormeJuridique;
                         }
 
                         idParam.Value = ID;
@@ -298,11 +328,10 @@ namespace bodacc
                         dateParam.Value = date;
                         codePostalParam.Value = codePostal;
                         villeParam.Value = ville;
-                        natureParam.Value = nature;
+                        natureParam.Value = nature.ToLowerInvariant();
                         rcsParam.Value = rcs.Replace(" ", "");
-                        typeParam.Value = type;
-                        previousParam.Value = previous;
-                        complementParam.Value = complement;
+                        typeParam.Value = type.ToLowerInvariant();
+                        formeParam.Value = forme.ToLowerInvariant();
                         ID += 1;
                         try
                         {

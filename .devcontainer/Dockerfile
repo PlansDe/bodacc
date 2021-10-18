@@ -12,7 +12,8 @@ RUN apt update \
     apt-transport-https \
     sqlite3 \
     git \
-    python3-pip 
+    python3-pip \
+    make
 
 RUN pip3 install pandas matplotlib dateparser
 
