@@ -12,12 +12,8 @@ RUN apt update \
     apt-transport-https \
     sqlite3 \
     git \
-    software-properties-common
+    python3-pip 
 
-RUN add-apt-repository ppa:deadsnakes/ppa
-
-RUN apt update \
-    && apt install --assume-yes --quiet --no-install-recommends \
-    python3.8 
+RUN pip3 install pandas matplotlib dateparser
 
 ADD . .
