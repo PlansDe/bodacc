@@ -10,6 +10,8 @@ namespace bodacc
         public string Creation { get; set; }
         [XmlElement(ElementName = "rectificatif")]
         public string Rectificatif { get; set; }
+        [XmlElement(ElementName = "annonce")]
+        public string Annonce { get; set; }
     }
 
     [XmlRoot(ElementName = "personnePhysique")]
@@ -74,6 +76,9 @@ namespace bodacc
         [XmlElement(ElementName = "complementJugement")]
         public string ComplementJugement { get; set; }
     }
+
+    [XmlRoot(ElementName = "avis")]
+    public class Avis : Annonce { }
 
     [XmlRoot(ElementName = "annonce")]
     public class Annonce
@@ -154,6 +159,13 @@ namespace bodacc
         public List<Annonce> Annonce { get; set; }
     }
 
+    [XmlRoot(ElementName = "listAvis")]
+    public class ListAvis
+    {
+        [XmlElement(ElementName = "avis")]
+        public List<Avis> Avis { get; set; }
+    }
+
     [XmlRoot(ElementName = "PCL_REDIFF")]
     public class PCL_REDIFF
     {
@@ -169,4 +181,21 @@ namespace bodacc
         public string NoNamespaceSchemaLocation { get; set; }
     }
 
+
+
+
+    [XmlRoot(ElementName = "PCL_REDIFF")]
+    public class PCL_REDIFF_OLD
+    {
+        [XmlElement(ElementName = "parution")]
+        public string Parution { get; set; }
+        [XmlElement(ElementName = "dateParution")]
+        public string DateParution { get; set; }
+        [XmlElement(ElementName = "listAvis")]
+        public ListAvis Avis { get; set; }
+        [XmlAttribute(AttributeName = "xsi", Namespace = "http://www.w3.org/2000/xmlns/")]
+        public string Xsi { get; set; }
+        [XmlAttribute(AttributeName = "noNamespaceSchemaLocation", Namespace = "http://www.w3.org/2001/XMLSchema-instance")]
+        public string NoNamespaceSchemaLocation { get; set; }
+    }
 }

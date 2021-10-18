@@ -1,33 +1,18 @@
 {
     // Ref doc: https://code.visualstudio.com/docs/remote/devcontainerjson-reference
     "name": "bodacc",
-    // Docker build options
     "context": "../",
-    "dockerFile": "../.vscode/Dockerfile",
+    "dockerFile": "Dockerfile",
     "build": {
         "target": "vscode"
     },
-    //Docker run options
-    "runArgs": [
-        "--init", //For docker in docker
-        "--cap-add=SYS_PTRACE",
-        "--security-opt",
-        "seccomp=unconfined",
-        "--dns=9.9.9.10",
-        "--dns=10.100.5.4",
-        "--dns=10.100.5.7"
-    ],
-    "mounts": [
-        "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" //Make possible to use docker in docker
-    ],
     // Vscode docker options
     "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=delegated",
     "workspaceFolder": "/app",
-    "initializeCommand": "docker network create vscode_net || true", // Create network for docker
+    "initializeCommand": "./createtable.sh",
     // VSCODE settings
     "settings": {
         "files.watcherExclude": {
-            "**/target/**": true,
             "**/bin/**": true,
             "**/obj/**": true,
         },
