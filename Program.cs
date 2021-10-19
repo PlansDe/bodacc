@@ -26,7 +26,7 @@ namespace bodacc
         const String REMOTE_ARCHIVE_HISTO = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/FluxHistorique/BODACC_{0:D4}.tar";
         static void Main(string[] args)
         {
-            //DownloadData(2008);
+            // DownloadData(2008);
             //DecompressData();
             PopulateDB(BODACC_DIR);
         }
@@ -155,7 +155,6 @@ namespace bodacc
 
                 foreach (var file in Directory.GetFiles(directory, "*.xml"))
                 {
-                    //Console.Write("\rinserting file {0} -- ID = {1}", file, ID);
                     DBProcessFile(file, connection, year, ref ID);
                 }
             }
@@ -298,7 +297,7 @@ namespace bodacc
                                 .Replace("ao   t", "août")
                                 .Replace("d   cembre", "décembre");
                             DateTime parsed_date;
-                            if (!DateTime.TryParseExact(input, "yyyy-mm-dd", CultureInfo.InvariantCulture, styles, out parsed_date))
+                            if (!DateTime.TryParseExact(input, "yyyy-MM-dd", CultureInfo.InvariantCulture, styles, out parsed_date))
                             {
                                 if (!DateTime.TryParseExact(input, "d MMMM yyyy", french, styles, out parsed_date))
                                 {
