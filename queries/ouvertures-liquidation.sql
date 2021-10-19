@@ -1,10 +1,13 @@
 -- SQLite
-SELECT annonces.DATE,annonces.CODEPOSTAL,annonces.VILLE,annonces.RCS,annonces.FORMEJURIDIQUE, uniteslegales.NOM, etablissements.EFFECTIFS
+SELECT annonces.NUMERO, annonces.DATE,annonces.CODEPOSTAL,annonces.VILLE,annonces.RCS,annonces.FORMEJURIDIQUE, etablissements.EFFECTIFS
       FROM annonces 
-      INNER JOIN uniteslegales ON annonces.RCS=uniteslegales.SIREN
-      INNER JOIN etablissements ON annonces.RCS=etablissements.SIREN
-      WHERE annonces.NATURE = "jugement d'ouverture de liquidation judiciaire"
-         AND annonces.FORMEJURIDIQUE != "s.c.i"
+      INNER JOIN etablissements ON annonces.RCS=etablissements.SIREN OR annonces.RCS = etablissements.SIRET
+      WHERE (
+                  annonces.NATURE = "jugement d'ouverture d'une procédure de sauvegarde accélérée"
+                  OR annonces.NATURE = "jugement d'ouverture d'une procédure de sauvegarde"
+            )
+         
+         AND annonces.FORMEJURIDIQUE != "s.cFORMEJURfrom.i"
          AND annonces.FORMEJURIDIQUE != "s.c.i."
          AND annonces.FORMEJURIDIQUE != "société civile immobilière"
          AND annonces.FORMEJURIDIQUE != "société civile immobiliére"
