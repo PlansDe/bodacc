@@ -8,7 +8,8 @@
     <Content Include="src/data.cs" />
     <Content Include="src/Program.cs" />
     <Content Include="src/Bodacc.cs" />
-    <Content Include="src/Sirene.cs" />
+    <Content Include="src/Etablissements.cs" />
+    <Content Include="src/UnitesLegales.cs" />
     <Content Include="src/GeoCodes.cs" />
   </ItemGroup>
   <ItemGroup>

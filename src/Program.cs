@@ -16,10 +16,13 @@ namespace bodacc
     {
         static void Main(string[] args)
         {
+            // SireneUnitesLegales.DownloadData();
+            // SireneUnitesLegales.Decompress();
+            // SireneUnitesLegales.PopulateDb();
             //GeoCodes.PopulateDB();
-            // SireneImport.DownloadData();
-            // SireneImport.Decompress();
-            // SireneImport.PopulateDb();
+            SireneEtablissements.DownloadData();
+            SireneEtablissements.Decompress();
+            SireneEtablissements.PopulateDb();
 
             // DownloadData(2008);
             //DecompressData();
