@@ -16,10 +16,11 @@ namespace bodacc
     {
         static void Main(string[] args)
         {
-            GeoCodes.PopulateDB();
+            //GeoCodes.PopulateDB();
             // SireneImport.DownloadData();
             // SireneImport.Decompress();
             // SireneImport.PopulateDb();
+
             // DownloadData(2008);
             //DecompressData();
             //BodaccImport.PopulateDB();

@@ -12,7 +12,7 @@ using Microsoft.Data.Sqlite;
 using SharpCompress.Common;
 using SharpCompress.Readers;
 using System.Diagnostics;
-
+using System.Text;
 
 namespace bodacc
 {
@@ -265,7 +265,6 @@ namespace bodacc
                         var previous = annonce.ParutionAvisPrecedent == null ? "" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
                         var type = annonce.TypeAnnonce.Creation != null ? "creation" :
                                        (annonce.TypeAnnonce.Rectificatif != null ? "rectificatif" : "");
-
                         var date = "";
                         var french = CultureInfo.GetCultureInfo("fr-FR");
                         var styles = DateTimeStyles.AllowInnerWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite;
@@ -318,7 +317,7 @@ namespace bodacc
                         ID += 1;
                         try
                         {
-                            command.ExecuteNonQuery();
+                            //command.ExecuteNonQuery();
                         }
                         catch (Exception e)
                         {
@@ -327,9 +326,26 @@ namespace bodacc
                         }
                     }
 
-                    transaction.Commit();
+                    //transaction.Commit();
                 }
             }
+        }
+
+        static string RemoveDiacritics(string text)
+        {
+            var normalizedString = text.Normalize(NormalizationForm.FormD);
+            var stringBuilder = new StringBuilder();
+
+            foreach (var c in normalizedString)
+            {
+                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
+                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
+                {
+                    stringBuilder.Append(c);
+                }
+            }
+
+            return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
     }
 }
