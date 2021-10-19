@@ -1,5 +1,5 @@
 release:
-	dotnet build --configuration release
+	dotnet build --configuration Release
 
 run: release
-	dotnet run --configuration release
+	dotnet run --configuration Release
