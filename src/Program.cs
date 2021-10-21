@@ -16,17 +16,17 @@ namespace bodacc
     {
         static void Main(string[] args)
         {
-            // SireneUnitesLegales.DownloadData();
-            // SireneUnitesLegales.Decompress();
-            // SireneUnitesLegales.PopulateDb();
-            //GeoCodes.PopulateDB();
-            SireneEtablissements.DownloadData();
-            SireneEtablissements.Decompress();
-            SireneEtablissements.PopulateDb();
+            // // SireneUnitesLegales.DownloadData();
+            // // SireneUnitesLegales.Decompress();
+            // // SireneUnitesLegales.PopulateDb();
+            // //GeoCodes.PopulateDB();
+            // SireneEtablissements.DownloadData();
+            // SireneEtablissements.Decompress();
+            // SireneEtablissements.PopulateDb();
 
-            // DownloadData(2008);
-            //DecompressData();
-            //BodaccImport.PopulateDB();
+            //BodaccImport.DownloadData(2008);
+            //BodaccImport.DecompressData();
+            BodaccImport.PopulateDB();
         }
 
 

@@ -45,7 +45,7 @@ namespace bodacc
             }
         }
 
-        static void DecompressData()
+        public static void DecompressData()
         {
             foreach (var directory in Directory.EnumerateDirectories(BODACC_DIR).OrderBy(d => d))
             {
@@ -207,13 +207,16 @@ namespace bodacc
             {
                 var command = connection.CreateCommand();
                 command.CommandText = @"
-                                INSERT INTO annonces (ID, NUMERO, DATE, CODEPOSTAL,VILLE,NATURE,RCS,TYPE,FORMEJURIDIQUE)
-                                VALUES (@ID,@Numero,@Date,@CodePostal,@Ville,@Nature,@Rcs,@Type,@FormeJuridique)
+                                INSERT INTO annonces (ID, NUMERO, PARUTION, DATE, CODEPOSTAL,VILLE,NATURE,RCS,TYPE,FORMEJURIDIQUE, PREVIOUS)
+                                VALUES (@ID, @Numero, @Parution, @Date,@CodePostal,@Ville,@Nature,@Rcs,@Type,@FormeJuridique, @Previous)
                             ";
 
                 var idParam = new SqliteParameter();
                 idParam.ParameterName = "@ID";
                 command.Parameters.Add(idParam);
+                var parutionParam = new SqliteParameter();
+                parutionParam.ParameterName = "@Parution";
+                command.Parameters.Add(parutionParam);
                 var numeroParam = new SqliteParameter();
                 numeroParam.ParameterName = "@Numero";
                 command.Parameters.Add(numeroParam);
@@ -238,13 +241,16 @@ namespace bodacc
                 var formeParam = new SqliteParameter();
                 formeParam.ParameterName = "@FormeJuridique";
                 command.Parameters.Add(formeParam);
+                var previousParam = new SqliteParameter();
+                previousParam.ParameterName = "@Previous";
+                command.Parameters.Add(previousParam);
 
                 XmlSerializer serializer = new XmlSerializer(typeof(PCL_REDIFF));
 
                 using (XmlReader reader = XmlReader.Create(file))
                 {
                     PCL_REDIFF bulletin = (PCL_REDIFF)serializer.Deserialize(reader);
-
+                    var parution = int.Parse(bulletin.Parution);
                     foreach (var annonce in bulletin.Annonces.Annonce)
                     {
                         var codePostal = "";
@@ -262,7 +268,7 @@ namespace bodacc
                         }
 
                         var rcs = annonce.NumeroImmatriculation.Any() ? annonce.NumeroImmatriculation.First().NumeroIdentificationRCS : "non inscrit";
-                        var previous = annonce.ParutionAvisPrecedent == null ? "" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
+                        var previous = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
                         var type = annonce.TypeAnnonce.Creation != null ? "creation" :
                                        (annonce.TypeAnnonce.Rectificatif != null ? "rectificatif" : "");
                         var date = "";
@@ -306,7 +312,9 @@ namespace bodacc
                         }
 
                         idParam.Value = ID;
-                        numeroParam.Value = annonce.NumeroAnnonce.ToLowerInvariant().Trim();
+                        parutionParam.Value = parution;
+                        numeroParam.Value = int.Parse(annonce.NumeroAnnonce);
+
                         dateParam.Value = date;
                         codePostalParam.Value = codePostal;
                         villeParam.Value = ville;
@@ -314,10 +322,12 @@ namespace bodacc
                         rcsParam.Value = rcs.Replace(" ", "");
                         typeParam.Value = type.ToLowerInvariant();
                         formeParam.Value = forme.ToLowerInvariant();
+                        previousParam.Value = int.Parse(previous);
+
                         ID += 1;
                         try
                         {
-                            //command.ExecuteNonQuery();
+                            command.ExecuteNonQuery();
                         }
                         catch (Exception e)
                         {
@@ -326,7 +336,7 @@ namespace bodacc
                         }
                     }
 
-                    //transaction.Commit();
+                    transaction.Commit();
                 }
             }
         }
