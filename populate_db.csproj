@@ -5,7 +5,8 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Content Include="src/data.cs" />
+    <Content Include="src/Data.cs" />
+    <Content Include="src/State.cs" />
     <Content Include="src/Program.cs" />
     <Content Include="src/Bodacc.cs" />
     <Content Include="src/Etablissements.cs" />
@@ -14,7 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.11" />
-    <PackageReference Include="sharpcompress" Version="0.30.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115" />
   </ItemGroup>
 </Project>

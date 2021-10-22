@@ -1,11 +1,13 @@
 -- SQLite
-SELECT annonces.PARUTION, annonces.NUMERO, annonces.DATE,annonces.RCS, annonces.CODEPOSTAL,annonces.VILLE,annonces.FORMEJURIDIQUE
+SELECT annonces.DATE, etablissements.EFFECTIFS
       FROM annonces 
+      LEFT JOIN etablissements  ON annonces.RCS = etablissements.SIREN
       WHERE (
                   annonces.NATURE = "jugement d'ouverture de liquidation judiciaire"
                   OR annonces.NATURE = "jugement de conversion en liquidation judiciaire"
             )
-         
+         AND etablissements.EFFECTIFS >= "03"
+         AND etablissements.EFFECTIFS != "NN"
          AND annonces.FORMEJURIDIQUE != "s.c.i"
          AND annonces.FORMEJURIDIQUE != "s.c.i."
          AND annonces.FORMEJURIDIQUE != "société civile immobilière"

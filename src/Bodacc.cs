@@ -9,15 +9,26 @@ using System.Net;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.Data.Sqlite;
-using SharpCompress.Common;
-using SharpCompress.Readers;
 using System.Diagnostics;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace bodacc
 {
     public class BodaccImport
     {
+        static State state;
+
+        static BodaccImport()
+        {
+            state = new State();
+            if (File.Exists(".state"))
+            {
+                var text = File.ReadAllText(".state");
+                state = JsonConvert.DeserializeObject<State>(text);
+            }
+        }
+
         const String DB_NAME = "bodacc.db";
         const String BODACC_DIR = "BODACC";
         const String REMOTE_FILE_FORMAT_2021 = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/{0:D4}/PCL_BXA{0:D4}{1:D4}.taz";
@@ -25,13 +36,13 @@ namespace bodacc
         const String REMOTE_FILE_FORMAT_HISTORY = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/FluxHistorique/{0:D4}/PCL_BXA{0:D4}{1:D4}.taz";
         // 2008 - 2021
         const String REMOTE_ARCHIVE_HISTO = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/FluxHistorique/BODACC_{0:D4}.tar";
+        static String last_year = State.Bodacc.LastParution.Substring(0, 4);
 
         public static void DownloadData(int from_year)
         {
-
             WebClient client = new WebClient();
             Console.WriteLine("Downloading data from {0} to {1} included", from_year, DateTime.Now.Year);
-            for (int year = from_year; year <= DateTime.Now.Year; ++year)
+            for (int year = Math.Max(int.Parse(last_year), from_year); year <= DateTime.Now.Year; ++year)
             {
                 Console.WriteLine("Downloading year {0}", year);
                 if (year >= 2017 && year <= DateTime.Now.Year)
@@ -49,38 +60,45 @@ namespace bodacc
         {
             foreach (var directory in Directory.EnumerateDirectories(BODACC_DIR).OrderBy(d => d))
             {
-                Console.WriteLine("extracting data in {0}", directory);
-                var di = new DirectoryInfo(directory);
-                int year = int.Parse(di.Name);
-                if (year < 2017)
+                var directoryName = new DirectoryInfo(directory).Name;
+                if (directoryName.CompareTo(last_year) > 0 || directory == DateTime.UtcNow.Year.ToString())
                 {
-                    DecompressOld(directory);
-                    DecompressRecent(directory);
-                }
-                else
-                {
-                    DecompressRecent(directory);
-                }
+                    Console.WriteLine("extracting data in {0}", directory);
+                    var di = new DirectoryInfo(directory);
+                    int year = int.Parse(di.Name);
+                    if (year < 2017)
+                    {
+                        DecompressOld(directory);
+                        DecompressRecent(directory);
+                    }
+                    else
+                    {
+                        DecompressRecent(directory);
+                    }
 
-                foreach (var file in Directory.EnumerateFiles(directory))
-                {
-                    var ff = new FileInfo(file);
-                    if (file.EndsWith(".tar"))
-                        continue;
-                    if (ff.Name.StartsWith("PCL_BXA"))
-                        continue;
-                    File.Delete(file);
+                    foreach (var file in Directory.EnumerateFiles(directory))
+                    {
+                        var ff = new FileInfo(file);
+                        if (file.EndsWith(".tar"))
+                            continue;
+                        if (ff.Name.StartsWith("PCL_BXA"))
+                            continue;
+                        File.Delete(file);
+                    }
                 }
             }
         }
 
         public static void PopulateDB()
         {
-            ulong ID = 1;
+            int ID = State.Bodacc.LastID;
             foreach (String subDirectory in Directory.GetDirectories(BODACC_DIR).OrderBy(d => d))
             {
                 int year = int.Parse(new DirectoryInfo(subDirectory).Name);
-                PopulateDBYear(subDirectory, year, ref ID);
+                if (year > int.Parse(last_year) || year == DateTime.UtcNow.Year)
+                {
+                    PopulateDBYear(subDirectory, year, ref ID);
+                }
             }
         }
 
@@ -172,13 +190,13 @@ namespace bodacc
             }
         }
 
-        static void PopulateDBYear(string directory, int year, ref ulong ID)
+        static void PopulateDBYear(string directory, int year, ref int ID)
         {
             using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
             {
                 connection.Open();
 
-                foreach (var file in Directory.GetFiles(directory, "*.xml"))
+                foreach (var file in Directory.GetFiles(directory, "*.xml").OrderBy(f => f))
                 {
                     DBProcessFile(file, connection, year, ref ID);
                 }
@@ -200,7 +218,7 @@ namespace bodacc
             Process.Start(startInfo).WaitForExit();
         }
 
-        static void DBProcessFile(String file, SqliteConnection connection, int year, ref ulong ID)
+        static void DBProcessFile(String file, SqliteConnection connection, int year, ref int ID)
         {
             CultureInfo provider = CultureInfo.InvariantCulture;
             using (var transaction = connection.BeginTransaction())
@@ -250,93 +268,102 @@ namespace bodacc
                 using (XmlReader reader = XmlReader.Create(file))
                 {
                     PCL_REDIFF bulletin = (PCL_REDIFF)serializer.Deserialize(reader);
-                    var parution = int.Parse(bulletin.Parution);
-                    foreach (var annonce in bulletin.Annonces.Annonce)
+                    var parution = bulletin.Parution;
+                    if (State.Bodacc.LastParution.CompareTo(parution) <= 0)
                     {
-                        var codePostal = "";
-                        var ville = "";
-                        if (annonce.Adresse != null && annonce.Adresse.Any())
+                        foreach (var annonce in bulletin.Annonces.Annonce)
                         {
-                            var france = annonce.Adresse.First().France;
-                            if (france != null)
+                            var numeroAnnonce = annonce.NumeroAnnonce;
+                            if (State.Bodacc.LastNumero.CompareTo(numeroAnnonce) >= 0)
                             {
-                                if (france.CodePostal != null)
-                                    codePostal = annonce.Adresse.First().France.CodePostal;
-                                if (france.Ville != null)
-                                    ville = france.Ville;
+                                continue;
                             }
-                        }
 
-                        var rcs = annonce.NumeroImmatriculation.Any() ? annonce.NumeroImmatriculation.First().NumeroIdentificationRCS : "non inscrit";
-                        var previous = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
-                        var type = annonce.TypeAnnonce.Creation != null ? "creation" :
-                                       (annonce.TypeAnnonce.Rectificatif != null ? "rectificatif" : "");
-                        var date = "";
-                        var french = CultureInfo.GetCultureInfo("fr-FR");
-                        var styles = DateTimeStyles.AllowInnerWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite;
-                        if (annonce.Jugement != null && !String.IsNullOrWhiteSpace(annonce.Jugement.Date))
-                        {
-                            date = "";
-                            var input = annonce.Jugement.Date
-                                .Replace("1er", "1")
-                                .Replace('\u00ef', ' ')
-                                .Replace('\u00bf', ' ')
-                                .Replace('\u00bd', ' ')
-                                .Replace("f   evrier", "février")
-                                .Replace("ao   t", "août")
-                                .Replace("d   cembre", "décembre");
-                            DateTime parsed_date;
-                            if (!DateTime.TryParseExact(input, "yyyy-MM-dd", CultureInfo.InvariantCulture, styles, out parsed_date))
+                            var codePostal = "";
+                            var ville = "";
+                            if (annonce.Adresse != null && annonce.Adresse.Any())
                             {
-                                if (!DateTime.TryParseExact(input, "d MMMM yyyy", french, styles, out parsed_date))
+                                var france = annonce.Adresse.First().France;
+                                if (france != null)
                                 {
-                                    Console.WriteLine("cannot parse date : " + annonce.Jugement.Date);
+                                    if (france.CodePostal != null)
+                                        codePostal = annonce.Adresse.First().France.CodePostal;
+                                    if (france.Ville != null)
+                                        ville = france.Ville;
                                 }
                             }
 
-                            date = parsed_date.ToString("yyyy-MM-dd");
+                            var rcs = annonce.NumeroImmatriculation.Any() ? annonce.NumeroImmatriculation.First().NumeroIdentificationRCS : "non inscrit";
+                            var previous = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
+                            var type = annonce.TypeAnnonce.Creation != null ? "creation" :
+                                           (annonce.TypeAnnonce.Rectificatif != null ? "rectificatif" : "");
+                            var date = "";
+                            var french = CultureInfo.GetCultureInfo("fr-FR");
+                            var styles = DateTimeStyles.AllowInnerWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite;
+                            if (annonce.Jugement != null && !String.IsNullOrWhiteSpace(annonce.Jugement.Date))
+                            {
+                                date = "";
+                                var input = annonce.Jugement.Date
+                                    .Replace("1er", "1")
+                                    .Replace('\u00ef', ' ')
+                                    .Replace('\u00bf', ' ')
+                                    .Replace('\u00bd', ' ')
+                                    .Replace("f   evrier", "février")
+                                    .Replace("ao   t", "août")
+                                    .Replace("d   cembre", "décembre");
+                                DateTime parsed_date;
+                                if (!DateTime.TryParseExact(input, "yyyy-MM-dd", CultureInfo.InvariantCulture, styles, out parsed_date))
+                                {
+                                    if (!DateTime.TryParseExact(input, "d MMMM yyyy", french, styles, out parsed_date))
+                                    {
+                                        Console.WriteLine("cannot parse date : " + annonce.Jugement.Date);
+                                    }
+                                }
+
+                                date = parsed_date.ToString("yyyy-MM-dd");
+                            }
+
+                            var nature = "";
+                            if (annonce.Jugement != null && annonce.Jugement.Nature != null)
+                            {
+                                if (annonce.Jugement.Nature != null)
+                                    nature = annonce.Jugement.Nature;
+                            }
+
+                            var forme = "";
+                            if (annonce.PersonneMorale != null && annonce.PersonneMorale.Any())
+                            {
+                                if (annonce.PersonneMorale.First().FormeJuridique != null)
+                                    forme = annonce.PersonneMorale.First().FormeJuridique;
+                            }
+
+                            idParam.Value = ID;
+                            parutionParam.Value = parution;
+                            numeroParam.Value = numeroAnnonce;
+
+                            dateParam.Value = date;
+                            codePostalParam.Value = codePostal;
+                            villeParam.Value = ville;
+                            natureParam.Value = nature.ToLowerInvariant();
+                            rcsParam.Value = rcs.Replace(" ", "");
+                            typeParam.Value = type.ToLowerInvariant();
+                            formeParam.Value = forme.ToLowerInvariant();
+                            previousParam.Value = int.Parse(previous);
+
+                            ID += 1;
+                            try
+                            {
+                                command.ExecuteNonQuery();
+                            }
+                            catch (Exception e)
+                            {
+                                Console.Error.WriteLine("cannot insert ID : {0} for numero : {1}", ID - 1, annonce.NumeroAnnonce);
+                                Console.Error.WriteLine(e.Message);
+                            }
                         }
 
-                        var nature = "";
-                        if (annonce.Jugement != null && annonce.Jugement.Nature != null)
-                        {
-                            if (annonce.Jugement.Nature != null)
-                                nature = annonce.Jugement.Nature;
-                        }
-
-                        var forme = "";
-                        if (annonce.PersonneMorale != null && annonce.PersonneMorale.Any())
-                        {
-                            if (annonce.PersonneMorale.First().FormeJuridique != null)
-                                forme = annonce.PersonneMorale.First().FormeJuridique;
-                        }
-
-                        idParam.Value = ID;
-                        parutionParam.Value = parution;
-                        numeroParam.Value = int.Parse(annonce.NumeroAnnonce);
-
-                        dateParam.Value = date;
-                        codePostalParam.Value = codePostal;
-                        villeParam.Value = ville;
-                        natureParam.Value = nature.ToLowerInvariant();
-                        rcsParam.Value = rcs.Replace(" ", "");
-                        typeParam.Value = type.ToLowerInvariant();
-                        formeParam.Value = forme.ToLowerInvariant();
-                        previousParam.Value = int.Parse(previous);
-
-                        ID += 1;
-                        try
-                        {
-                            command.ExecuteNonQuery();
-                        }
-                        catch (Exception e)
-                        {
-                            Console.Error.WriteLine("cannot insert ID : {0} for numero : {1}", ID, annonce.NumeroAnnonce);
-                            Console.Error.WriteLine(e.Message);
-                        }
+                        transaction.Commit();
                     }
-
-                    transaction.Commit();
                 }
             }
         }

@@ -1,5 +1,3 @@
 -- SQLite
-SELECT * FROM etablissements
-        WHERE NOM != ""
-        AND NOM IS NOT NULL
- LIMIT 10
+SELECT * FROM uniteslegales
+        WHERE SIREN = "308091131"

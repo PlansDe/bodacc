@@ -16,7 +16,7 @@ namespace bodacc
         const String SIRENE_DIR = "SIRENE";
         const String LOCAL_ARCHIVE = "stock-unites-legales.zip";
         const String LOCAL_FILENAME = "StockUniteLegale_utf8.csv";
-        const String REMOTE_URL = "    https://www.data.gouv.fr/fr/datasets/r/825f4199-cadd-486c-ac46-a65a8ea1a047";
+        const String REMOTE_URL = "https://www.data.gouv.fr/fr/datasets/r/825f4199-cadd-486c-ac46-a65a8ea1a047";
 
         public static void DownloadData(bool forceUpdate = false)
         {
@@ -67,8 +67,8 @@ namespace bodacc
                     {
                         var command = connection.CreateCommand();
                         command.CommandText = @"
-                        INSERT INTO uniteslegales (SIREN, NOM)
-                        VALUES (@Siren, @Nom)
+                        INSERT INTO uniteslegales (SIREN, NOM, EFFECTIFS)
+                        VALUES (@Siren, @Nom, @Effectifs)
                     ";
                         var pSiren = new SqliteParameter();
                         pSiren.ParameterName = "@Siren";
@@ -76,6 +76,9 @@ namespace bodacc
                         var pNom = new SqliteParameter();
                         pNom.ParameterName = "@Nom";
                         command.Parameters.Add(pNom);
+                        var pEff = new SqliteParameter();
+                        pEff.ParameterName = "@Effectifs";
+                        command.Parameters.Add(pEff);
                         foreach (string line in lines)
                         {
                             var split = line.Split(",");
@@ -88,6 +91,7 @@ namespace bodacc
 
                             pSiren.Value = int.Parse(siren);
                             pNom.Value = split[labels_indices["denominationUniteLegale"]];
+                            pEff.Value = split[labels_indices["trancheEffectifsUniteLegale"]];
                             command.ExecuteNonQuery();
                             ID += 1;
                         }
