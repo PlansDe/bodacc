@@ -1,6 +1,6 @@
 # bodacc
-- scanne le bodacc A (PCL_BXA)
-- scanne la base SIRENE
+- scanne le bodacc A (PCL_BXA) depuis les données officielles (https://echanges.dila.gouv.fr/OPENDATA/BODACC/) 
+- scanne la base SIRENE (https://www.data.gouv.fr/fr/datasets/base-sirene-des-entreprises-et-de-leurs-etablissements-siren-siret/)
 - peuple ou met à jour une base de données contenant :
     - geocodes :
         - CODE : INSEE geo code
