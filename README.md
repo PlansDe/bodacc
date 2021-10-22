@@ -1,11 +1,60 @@
 # bodacc
-scanne le bodacc pour y trouver les annonces / statuts des PSE qui à procédure de sauvegarde
+- scanne le bodacc A (PCL_BXA)
+- scanne la base SIRENE
+- peuple ou met à jour une base de données contenant :
+    - geocodes :
+        - CODE : INSEE geo code
+        - NOM  : nom de pays
+    - effectifs :
+        - CODE : tranche d'effectifs INSEE (ex: 32)
+        - NOM  : version lisible (ex: 250 à 499 salariés)
+    - etablissements : 
+        - SIRET
+        - SIREN
+        - ETATADMIN : 'A' pour actif, 'F' pour fermé
+        - EFFECTIFS : tranche d'effectifs INSEE (potentiellement chaine vide ou null)
+        - CP : Code postal (potentiellement null)
+        - VILLE1 : Ville ou rue (potentiellement null)
+        - VILLE2 : Ville ou rue (potentiellement null)
+        - PAYS1  : Pays etranger (INSEE geocode, potentiellement null)
+        - PAYS2  : Pays etranger (INSE geocode, potentiellement null)
+        - VILLEETRANGER1 : Ville etrangère (potentiellement null)
+        - VILLEETRANGER2 : Ville etrangère (potentiellement null)
+        - ACTIVITE : code activite (INSEE)
+    - uniteslegales :
+        - SIREN
+        - NOM : dénomination usuelle
+        - EFFECTIFS : tranche d'effectifs (code INSEE, potentiellement null)
+    - annonces :
+        - ID
+        - PARUTION : date de parution 
+        - NUMERO : numero de l'annonce pour cette date de parution
+        - DATE : date de publication (YYYY-MM-DD)
+        - CODEPOSTAL : code postal (potentiellement null)
+        - VILLE : ville (potentiellement null)
+        - NATURE : nature du jugement (string)
+        - RCS : SIREN
+        - TYPE : création/rectificatif
+        - FORMEJURIDIQUE (earl, sas, sa, eurl, ...)
+        - PREVIOUS : ?
 
 # developer
 - installer vscode
 - installer docker
 - installer l'extension devcontainer
 - ouvrir le dossier dans un conteneur (open locally + CTRL MAJ P -> remote containers)
-- run ./createtable.sh to create table
+- s'assurer que bodacc.db existe (créée avec le container). Sinon lancer createtable.sh à la racine
 - build : dotnet build
 - run   : dotnet run
+- first import : 
+    - prend 10/20 min le temps de tout télécharger, dezipper, déserialiser, inserer dans la db
+- next : 
+    - prend quelques secondes, sauf toutes les semaines où on essaie de rafraichir SIRENE
+
+# TODO
+- rajouter le drop table sirene toutes les semaines (pour rafraichir le fichier)
+- s'assurer que l'url SIRENE ne change pas
+- faire un cron qui 
+    - refresh la base
+    - liste les dernières annonces bodacc intéressantes
+    - envoie une notification quelque part
