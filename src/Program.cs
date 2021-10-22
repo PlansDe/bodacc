@@ -16,15 +16,14 @@ namespace bodacc
     {
         static void Main(string[] args)
         {
-            Console.WriteLine($"bodacc state : {State.Bodacc.LastID}, {State.Bodacc.LastParution}, {State.Bodacc.LastNumero}");
-            // // SireneUnitesLegales.DownloadData();
-            // // SireneUnitesLegales.Decompress();
-            //SireneUnitesLegales.PopulateDb();
-            // //GeoCodes.PopulateDB();
-            // SireneEtablissements.DownloadData();
-            // SireneEtablissements.Decompress();
-            // SireneEtablissements.PopulateDb();
-
+            GeoCodes.PopulateDB();
+            Effectifs.PopulateDB();
+            SireneUnitesLegales.DownloadData();
+            SireneUnitesLegales.Decompress();
+            SireneUnitesLegales.PopulateDb();
+            SireneEtablissements.DownloadData();
+            SireneEtablissements.Decompress();
+            SireneEtablissements.PopulateDb();
             BodaccImport.DownloadData(2008);
             BodaccImport.DecompressData();
             BodaccImport.PopulateDB();

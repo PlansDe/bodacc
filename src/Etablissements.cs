@@ -20,6 +20,7 @@ namespace bodacc
 
         public static void DownloadData(bool forceUpdate = false)
         {
+            Console.WriteLine("download etablissements from SIRENE");
             if (!Directory.Exists(SIRENE_DIR))
             {
                 Directory.CreateDirectory(SIRENE_DIR);
@@ -39,9 +40,14 @@ namespace bodacc
 
         public static void Decompress(bool forceUpdate = false)
         {
+            Console.WriteLine("decompress etablissements");
             var local_csv = new FileInfo(Path.Combine(SIRENE_DIR, LOCAL_FILENAME));
-            if (forceUpdate || !local_csv.Exists || DateTime.UtcNow - local_csv.LastWriteTimeUtc > TimeSpan.FromDays(1))
+            if (forceUpdate || !local_csv.Exists || DateTime.UtcNow - local_csv.LastWriteTimeUtc > TimeSpan.FromDays(7))
             {
+                if (File.Exists(local_csv.FullName))
+                {
+                    File.Delete(local_csv.FullName);
+                }
                 ZipFile.ExtractToDirectory(Path.Combine(SIRENE_DIR, LOCAL_ARCHIVE), SIRENE_DIR);
                 System.IO.File.SetLastWriteTimeUtc(local_csv.FullName, DateTime.UtcNow);
             }
@@ -49,6 +55,12 @@ namespace bodacc
 
         public static void PopulateDb()
         {
+            Console.WriteLine("populate etablissements");
+            if (Exists())
+            {
+                Console.WriteLine("etablissements already exists -- aborting");
+                return;
+            }
             using (var fileStream = File.OpenRead(Path.Combine(SIRENE_DIR, LOCAL_FILENAME)))
             using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, 4096))
             using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
@@ -147,6 +159,38 @@ namespace bodacc
                         transaction.Commit();
                         Console.Write("\r{0} entries processed", ID - 1);
                     }
+                }
+            }
+        }
+
+
+
+        private static bool Exists()
+        {
+            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var command = connection.CreateCommand();
+                    command.CommandText = "SELECT COUNT(*) FROM uniteslegales";
+                    try
+                    {
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                int count = reader.GetInt32(0);
+                                if (count > 0)
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+
+                    return false;
                 }
             }
         }

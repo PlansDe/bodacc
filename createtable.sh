@@ -1,5 +1,5 @@
 #!/bin/sh
-if [! -f bodacc.db ]; then 
+if [ ! -f bodacc.db ]; then 
 create_table
 fi
 

@@ -10,6 +10,11 @@ namespace bodacc
         const String DB_NAME = "bodacc.db";
         public static void PopulateDB()
         {
+            if (Exists())
+            {
+                Console.WriteLine("etablissements already populated -- aborting");
+                return;
+            }
             using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
             {
                 connection.Open();
@@ -34,6 +39,36 @@ namespace bodacc
                     }
 
                     transaction.Commit();
+                }
+            }
+        }
+
+        private static bool Exists()
+        {
+            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    var command = connection.CreateCommand();
+                    command.CommandText = "SELECT COUNT(*) FROM effectifs";
+                    try
+                    {
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                int count = reader.GetInt32(0);
+                                if (count == codes.Count)
+                                {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+
+                    return false;
                 }
             }
         }

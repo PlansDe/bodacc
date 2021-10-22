@@ -1,3 +1,2 @@
 -- SQLite
-SELECT * FROM uniteslegales
-        WHERE SIREN = "308091131"
+SELECT COUNT(*) FROM uniteslegales
