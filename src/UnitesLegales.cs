@@ -26,7 +26,7 @@ namespace bodacc
                 Directory.CreateDirectory(SIRENE_DIR);
             }
             var local_archive = new FileInfo(Path.Combine(SIRENE_DIR, LOCAL_ARCHIVE));
-            if (forceUpdate || !local_archive.Exists || DateTime.UtcNow - local_archive.LastWriteTimeUtc > TimeSpan.FromDays(1))
+            if (forceUpdate || !local_archive.Exists || DateTime.UtcNow - local_archive.LastWriteTimeUtc > TimeSpan.FromDays(7))
             {
                 if (local_archive.Exists)
                 {
@@ -38,11 +38,11 @@ namespace bodacc
             }
         }
 
-        public static void Decompress(bool forceUpdate = false)
+        public static bool Decompress(bool forceUpdate = false)
         {
             Console.WriteLine("decompress unites legales");
             var local_csv = new FileInfo(Path.Combine(SIRENE_DIR, LOCAL_FILENAME));
-            if (forceUpdate || !local_csv.Exists || DateTime.UtcNow - local_csv.LastWriteTimeUtc > TimeSpan.FromDays(1))
+            if (forceUpdate || !local_csv.Exists || DateTime.UtcNow - local_csv.LastWriteTimeUtc > TimeSpan.FromDays(7))
             {
                 if (local_csv.Exists)
                 {
@@ -51,15 +51,35 @@ namespace bodacc
 
                 ZipFile.ExtractToDirectory(Path.Combine(SIRENE_DIR, LOCAL_ARCHIVE), SIRENE_DIR);
                 System.IO.File.SetLastWriteTimeUtc(local_csv.FullName, DateTime.UtcNow);
+                return true;
             }
+
+            return false;
         }
 
-        public static void PopulateDb()
+        public static void PopulateDb(bool forceUpdate)
         {
             if (Exists())
             {
-                Console.WriteLine("uniteslegales already populated -- aborting");
-                return;
+                if (forceUpdate)
+                {
+                    using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+                    {
+                        connection.Open();
+                        using (var transaction = connection.BeginTransaction())
+                        {
+                            var command = connection.CreateCommand();
+                            command.CommandText = "DELETE FROM uniteslegales";
+                            command.ExecuteNonQuery();
+                            transaction.Commit();
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("etablissements already exists -- aborting");
+                    return;
+                }
             }
 
             HashSet<int> sirens = new HashSet<int>();

@@ -18,12 +18,11 @@ namespace bodacc
         {
             GeoCodes.PopulateDB();
             Effectifs.PopulateDB();
+            CodesNaf.PopulateDB();
             SireneUnitesLegales.DownloadData();
-            SireneUnitesLegales.Decompress();
-            SireneUnitesLegales.PopulateDb();
+            SireneUnitesLegales.PopulateDb(SireneUnitesLegales.Decompress());
             SireneEtablissements.DownloadData();
-            SireneEtablissements.Decompress();
-            SireneEtablissements.PopulateDb();
+            SireneEtablissements.PopulateDb(SireneEtablissements.Decompress());
             BodaccImport.DownloadData(2008);
             BodaccImport.DecompressData();
             BodaccImport.PopulateDB();

@@ -61,7 +61,7 @@ namespace bodacc
             foreach (var directory in Directory.EnumerateDirectories(BODACC_DIR).OrderBy(d => d))
             {
                 var directoryName = new DirectoryInfo(directory).Name;
-                if (directoryName.CompareTo(last_year) > 0 || directory == DateTime.UtcNow.Year.ToString())
+                if (directoryName.CompareTo(last_year) > 0 || directory == String.Format($"BODACC/{DateTime.UtcNow.Year}"))
                 {
                     Console.WriteLine("extracting data in {0}", directory);
                     var di = new DirectoryInfo(directory);

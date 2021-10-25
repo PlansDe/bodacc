@@ -12,6 +12,7 @@
     <Content Include="src/Etablissements.cs" />
     <Content Include="src/UnitesLegales.cs" />
     <Content Include="src/GeoCodes.cs" />
+    <Content Include="src/CodesNaf.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.11" />

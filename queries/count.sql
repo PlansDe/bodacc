@@ -1,2 +1,2 @@
 -- SQLite
-SELECT COUNT(*) FROM uniteslegales
+SELECT * from etablissements LIMIT 10

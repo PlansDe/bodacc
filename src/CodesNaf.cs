@@ -1,19 +1,32 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Data.Sqlite;
+using System.IO;
+using System.Linq;
 
 namespace bodacc
 {
     // https://www.insee.fr/fr/information/2028273
-    public class Effectifs
+    public class CodesNaf
     {
         const String DB_NAME = "bodacc.db";
+        static Dictionary<String, String> codes;
+        static CodesNaf()
+        {
+            codes = new Dictionary<string, string>();
+            foreach (var line in File.ReadAllLines(Path.Combine("SIRENE", "codes_naf.csv")))
+            {
+                var split = line.Split(',');
+                codes.Add(split[0], split[1]);
+            }
+        }
+
         public static void PopulateDB()
         {
-            Console.WriteLine("populate effectifs");
+            Console.WriteLine("populate codesnaf");
             if (Exists())
             {
-                Console.WriteLine("etablissements already populated -- aborting");
+                Console.WriteLine("codesnaf already populated -- aborting");
                 return;
             }
             using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
@@ -22,14 +35,14 @@ namespace bodacc
                 using (var transaction = connection.BeginTransaction())
                 {
                     var command = connection.CreateCommand();
-                    command.CommandText = @"INSERT INTO effectifs (CODE, NOM)
-                        VALUES (@Code, @Nom)
+                    command.CommandText = @"INSERT INTO codesnaf (CODE, LABEL)
+                        VALUES (@Code, @Label)
                     ";
                     var codeParam = new SqliteParameter();
                     codeParam.ParameterName = "@Code";
                     command.Parameters.Add(codeParam);
                     var nomParam = new SqliteParameter();
-                    nomParam.ParameterName = "@Nom";
+                    nomParam.ParameterName = "@Label";
                     command.Parameters.Add(nomParam);
 
                     foreach (var kvp in codes)
@@ -52,7 +65,7 @@ namespace bodacc
                 using (var transaction = connection.BeginTransaction())
                 {
                     var command = connection.CreateCommand();
-                    command.CommandText = "SELECT COUNT(*) FROM effectifs";
+                    command.CommandText = "SELECT COUNT(*) FROM codesnaf";
                     try
                     {
                         using (var reader = command.ExecuteReader())
@@ -73,25 +86,5 @@ namespace bodacc
                 }
             }
         }
-
-        private static Dictionary<String, String> codes = new Dictionary<string, string>
-        {
-            {"NN","Etablissement non employeur (pas de salarié au cours de l'année de référence et pas d'effectif au 31/12"},
-            {"00","0 salarié (n'ayant pas d'effectif au 31/12 mais ayant employé des salariés au cours de l'année de référence"},
-            {"01","1 ou 2 salariés"},
-            {"02","3 à 5 salariés"},
-            {"03","6 à 9 salariés"},
-            {"11","10 à 19 salariés"},
-            {"12","20 à 49 salariés"},
-            {"21","50 à 99 salariés"},
-            {"22","100 à 199 salariés"},
-            {"31","200 à 249 salariés"},
-            {"32","250 à 499 salariés"},
-            {"41","500 à 999 salariés"},
-            {"42","1 000 à 1 999 salariés"},
-            {"51","2 000 à 4 999 salariés"},
-            {"52","5 000 à 9 999 salariés"},
-            {"53","10 000 salariés et plus" }
-        };
     }
 }
