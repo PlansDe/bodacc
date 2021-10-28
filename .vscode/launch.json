@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "populate_db (debug)",
+            "name": "application (debug)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/bin/Debug/net5.0/populate_db.dll",
+            "program": "${workspaceFolder}/app/bin/Debug/net5.0/app.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,

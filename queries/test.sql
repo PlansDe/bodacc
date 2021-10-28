@@ -1,4 +1,1 @@
--- SQLite
-SELECT ID,PARUTION,NUMERO from annonces 
-    ORDER BY ID DESC
-    LIMIT 1;
+SELECT DISTINCT(NATURE) from annonces

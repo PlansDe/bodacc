@@ -10,6 +10,9 @@
     "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=delegated",
     "workspaceFolder": "/app",
     "initializeCommand": "./createtable.sh",
+    "runArgs": [
+        "--network=host",
+    ],
     // VSCODE settings
     "settings": {
         "files.watcherExclude": {
