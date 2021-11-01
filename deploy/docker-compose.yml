@@ -1,0 +1,32 @@
+version: "3.5"
+
+services:
+  postgre:
+    environment:
+      POSTGRES_DB: bodacc
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    build:
+      context: ..
+      dockerfile: deploy/postgre/Dockerfile
+    restart: always
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  crawl:
+    build:
+      context: ../
+      dockerfile: deploy/app/Dockerfile
+      target: release
+    depends_on:
+    - postgre
+    volumes:
+      - sirendata:/code/SIREN
+      - bodaccdata:/code/BODACC
+
+volumes: 
+  pgdata:
+  sirendata:
+  bodaccdata:
