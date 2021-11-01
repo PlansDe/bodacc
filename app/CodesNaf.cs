@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 using System.IO;
 using System.Linq;
 
@@ -9,7 +9,6 @@ namespace bodacc
     // https://www.insee.fr/fr/information/2028273
     public class CodesNaf
     {
-        const String DB_NAME = "bodacc.db";
         static Dictionary<String, String> codes;
         static CodesNaf()
         {
@@ -29,7 +28,7 @@ namespace bodacc
                 Console.WriteLine("codesnaf already populated -- aborting");
                 return;
             }
-            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
             {
                 connection.Open();
                 using (var transaction = connection.BeginTransaction())
@@ -38,10 +37,10 @@ namespace bodacc
                     command.CommandText = @"INSERT INTO codesnaf (CODE, LABEL)
                         VALUES (@Code, @Label)
                     ";
-                    var codeParam = new SqliteParameter();
+                    var codeParam = new NpgsqlParameter();
                     codeParam.ParameterName = "@Code";
                     command.Parameters.Add(codeParam);
-                    var nomParam = new SqliteParameter();
+                    var nomParam = new NpgsqlParameter();
                     nomParam.ParameterName = "@Label";
                     command.Parameters.Add(nomParam);
 
@@ -59,7 +58,7 @@ namespace bodacc
 
         private static bool Exists()
         {
-            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
             {
                 connection.Open();
                 using (var transaction = connection.BeginTransaction())

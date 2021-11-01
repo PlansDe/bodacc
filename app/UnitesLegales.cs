@@ -5,15 +5,15 @@ using System.Net;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 
 // TODO: merge that with Etablissements.cs in an abstract class
+// TODO: psql is way slower than sqlite -- we should optimize somehow 
 namespace bodacc
 {
     // documentation : https://www.data.gouv.fr/fr/datasets/r/65946639-3150-4492-a988-944e2633531e
     public class SireneUnitesLegales
     {
-        const String DB_NAME = "bodacc.db";
         const String SIRENE_DIR = "SIRENE";
         const String LOCAL_ARCHIVE = "stock-unites-legales.zip";
         const String LOCAL_FILENAME = "StockUniteLegale_utf8.csv";
@@ -65,7 +65,7 @@ namespace bodacc
             {
                 if (forceUpdate)
                 {
-                    using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+                    using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
                     {
                         connection.Open();
                         using (var transaction = connection.BeginTransaction())
@@ -87,7 +87,7 @@ namespace bodacc
             HashSet<int> sirens = new HashSet<int>();
             using (var fileStream = File.OpenRead(Path.Combine(SIRENE_DIR, LOCAL_FILENAME)))
             using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, 4096))
-            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
             {
                 connection.Open();
                 String head = streamReader.ReadLine();
@@ -105,22 +105,22 @@ namespace bodacc
                         INSERT INTO uniteslegales (SIREN, NOM, EFFECTIFS, ACTIVITE, CATEGORIEJURIDIQUE, NOMENCLATUREACTIVITE)
                         VALUES (@Siren, @Nom, @Effectifs, @Activite, @Cat, @NomAct)
                     ";
-                        var pSiren = new SqliteParameter();
+                        var pSiren = new NpgsqlParameter();
                         pSiren.ParameterName = "@Siren";
                         command.Parameters.Add(pSiren);
-                        var pNom = new SqliteParameter();
+                        var pNom = new NpgsqlParameter();
                         pNom.ParameterName = "@Nom";
                         command.Parameters.Add(pNom);
-                        var pEff = new SqliteParameter();
+                        var pEff = new NpgsqlParameter();
                         pEff.ParameterName = "@Effectifs";
                         command.Parameters.Add(pEff);
-                        var pActivite = new SqliteParameter();
+                        var pActivite = new NpgsqlParameter();
                         pActivite.ParameterName = "@Activite";
                         command.Parameters.Add(pActivite);
-                        var pCat = new SqliteParameter();
+                        var pCat = new NpgsqlParameter();
                         pCat.ParameterName = "@Cat";
                         command.Parameters.Add(pCat);
-                        var pNomAct = new SqliteParameter();
+                        var pNomAct = new NpgsqlParameter();
                         pNomAct.ParameterName = "@NomAct";
                         command.Parameters.Add(pNomAct);
                         foreach (string line in lines)
@@ -138,7 +138,7 @@ namespace bodacc
                                 continue;
                             }
 
-                            pSiren.Value = int.Parse(siren);
+                            pSiren.Value = siren;
                             var categorieJuridique = split[labels_indices["categorieJuridiqueUniteLegale"]];
                             pCat.Value = categorieJuridique;
                             var nom = split[labels_indices["denominationUniteLegale"]];
@@ -164,7 +164,7 @@ namespace bodacc
 
         private static bool Exists()
         {
-            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
             {
                 connection.Open();
                 using (var transaction = connection.BeginTransaction())

@@ -1,7 +1,7 @@
 SELECT DISTINCT(RCS),DATE,EFFECTIFS, NATURE from annonces
     LEFT JOIN uniteslegales
     ON annonces.RCS = uniteslegales.SIREN
-    WHERE DATE >= DATE('now', '-1 year')
+    WHERE DATE >= DATE('now', '-5 day')
     AND DATE <= DATE('now')
     AND uniteslegales.EFFECTIFS != "NN"
     AND uniteslegales.EFFECTIFS >= "01"

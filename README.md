@@ -39,11 +39,7 @@
         - PREVIOUS : ?
 
 # developer
-- installer vscode
-- installer docker
-- installer l'extension devcontainer
-- ouvrir le dossier dans un conteneur (open locally + CTRL MAJ P -> remote containers)
-- s'assurer que bodacc.db existe (créée avec le container). Sinon lancer createtable.sh à la racine
+- TODO
 - build : dotnet build
 - run   : dotnet run
 - first import : 

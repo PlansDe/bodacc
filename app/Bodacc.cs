@@ -8,9 +8,9 @@ using System.Linq;
 using System.Net;
 using System.Xml;
 using System.Xml.Serialization;
-using Microsoft.Data.Sqlite;
 using System.Diagnostics;
 using System.Text;
+using Npgsql;
 
 namespace bodacc
 {
@@ -23,7 +23,6 @@ namespace bodacc
             state = new State();
         }
 
-        const String DB_NAME = "bodacc.db";
         const String BODACC_DIR = "BODACC";
         const String REMOTE_FILE_FORMAT_2021 = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/{0:D4}/PCL_BXA{0:D4}{1:D4}.taz";
         // 2017 - 2021
@@ -85,13 +84,12 @@ namespace bodacc
 
         public static void PopulateDB()
         {
-            int ID = State.Bodacc.LastID + 1;
             foreach (String subDirectory in Directory.GetDirectories(BODACC_DIR).OrderBy(d => d))
             {
                 int year = int.Parse(new DirectoryInfo(subDirectory).Name);
                 if (year > int.Parse(last_year) || year == DateTime.UtcNow.Year)
                 {
-                    PopulateDBYear(subDirectory, year, ref ID);
+                    PopulateDBYear(subDirectory, year);
                 }
             }
         }
@@ -184,15 +182,15 @@ namespace bodacc
             }
         }
 
-        static void PopulateDBYear(string directory, int year, ref int ID)
+        static void PopulateDBYear(string directory, int year)
         {
-            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
             {
                 connection.Open();
 
                 foreach (var file in Directory.GetFiles(directory, "*.xml").OrderBy(f => f))
                 {
-                    DBProcessFile(file, connection, year, ref ID);
+                    DBProcessFile(file, connection, year);
                 }
             }
 
@@ -212,50 +210,50 @@ namespace bodacc
             Process.Start(startInfo).WaitForExit();
         }
 
-        static void DBProcessFile(String file, SqliteConnection connection, int year, ref int ID)
+        static void DBProcessFile(String file, NpgsqlConnection connection, int year)
         {
             CultureInfo provider = CultureInfo.InvariantCulture;
             using (var transaction = connection.BeginTransaction())
             {
                 var command = connection.CreateCommand();
                 command.CommandText = @"
-                                INSERT INTO annonces (ID, NUMERO, PARUTION, DATE, CODEPOSTAL,VILLE,NATURE,RCS,TYPE,FORMEJURIDIQUE, PREVIOUS)
-                                VALUES (@ID, @Numero, @Parution, @Date,@CodePostal,@Ville,@Nature,@Rcs,@Type,@FormeJuridique, @Previous)
+                                INSERT INTO annonces (PARUTION,NUMERO,DATE, CODEPOSTAL,VILLE,NATURE,RCS,TYPE,FORMEJURIDIQUE, PREVIOUS_PARUTION,PREVIOUS_NUMERO)
+                                VALUES(@Parution, @Numero, @Date, @CodePostal, @Ville, @Nature, @Rcs, @Type, @FormeJuridique, @Previous_P, @Previous_N)
                             ";
 
-                var idParam = new SqliteParameter();
-                idParam.ParameterName = "@ID";
-                command.Parameters.Add(idParam);
-                var parutionParam = new SqliteParameter();
+                var parutionParam = new NpgsqlParameter();
                 parutionParam.ParameterName = "@Parution";
                 command.Parameters.Add(parutionParam);
-                var numeroParam = new SqliteParameter();
+                var numeroParam = new NpgsqlParameter();
                 numeroParam.ParameterName = "@Numero";
                 command.Parameters.Add(numeroParam);
-                var dateParam = new SqliteParameter();
+                var dateParam = new NpgsqlParameter();
                 dateParam.ParameterName = "@Date";
                 command.Parameters.Add(dateParam);
-                var codePostalParam = new SqliteParameter();
+                var codePostalParam = new NpgsqlParameter();
                 codePostalParam.ParameterName = "@CodePostal";
                 command.Parameters.Add(codePostalParam);
-                var villeParam = new SqliteParameter();
+                var villeParam = new NpgsqlParameter();
                 villeParam.ParameterName = "@Ville";
                 command.Parameters.Add(villeParam);
-                var natureParam = new SqliteParameter();
+                var natureParam = new NpgsqlParameter();
                 natureParam.ParameterName = "@Nature";
                 command.Parameters.Add(natureParam);
-                var rcsParam = new SqliteParameter();
+                var rcsParam = new NpgsqlParameter();
                 rcsParam.ParameterName = "@Rcs";
                 command.Parameters.Add(rcsParam);
-                var typeParam = new SqliteParameter();
+                var typeParam = new NpgsqlParameter();
                 typeParam.ParameterName = "@Type";
                 command.Parameters.Add(typeParam);
-                var formeParam = new SqliteParameter();
+                var formeParam = new NpgsqlParameter();
                 formeParam.ParameterName = "@FormeJuridique";
                 command.Parameters.Add(formeParam);
-                var previousParam = new SqliteParameter();
-                previousParam.ParameterName = "@Previous";
-                command.Parameters.Add(previousParam);
+                var previousPParam = new NpgsqlParameter();
+                previousPParam.ParameterName = "@Previous_P";
+                command.Parameters.Add(previousPParam);
+                var previousNParam = new NpgsqlParameter();
+                previousNParam.ParameterName = "@Previous_N";
+                command.Parameters.Add(previousNParam);
 
                 XmlSerializer serializer = new XmlSerializer(typeof(PCL_REDIFF));
 
@@ -287,16 +285,17 @@ namespace bodacc
                                 }
                             }
 
-                            var rcs = annonce.NumeroImmatriculation.Any() ? annonce.NumeroImmatriculation.First().NumeroIdentificationRCS : "non inscrit";
-                            var previous = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
+                            var rcs = annonce.NumeroImmatriculation.Any() ? annonce.NumeroImmatriculation.First().NumeroIdentificationRCS : "inconnu";
+                            var previousA = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
+                            var previousP = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroParution;
                             var type = annonce.TypeAnnonce.Creation != null ? "creation" :
                                            (annonce.TypeAnnonce.Rectificatif != null ? "rectificatif" : "");
-                            var date = "";
+                            DateTime date = default(DateTime);
                             var french = CultureInfo.GetCultureInfo("fr-FR");
                             var styles = DateTimeStyles.AllowInnerWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite;
                             if (annonce.Jugement != null && !String.IsNullOrWhiteSpace(annonce.Jugement.Date))
                             {
-                                date = "";
+                                // TODO: fix encoding issues !!!
                                 var input = annonce.Jugement.Date
                                     .Replace("1er", "1")
                                     .Replace('\u00ef', ' ')
@@ -314,7 +313,7 @@ namespace bodacc
                                     }
                                 }
 
-                                date = parsed_date.ToString("yyyy-MM-dd");
+                                date = parsed_date;
                             }
 
                             var nature = "";
@@ -331,7 +330,6 @@ namespace bodacc
                                     forme = annonce.PersonneMorale.First().FormeJuridique;
                             }
 
-                            idParam.Value = ID;
                             parutionParam.Value = parution;
                             numeroParam.Value = numeroAnnonce;
 
@@ -339,19 +337,23 @@ namespace bodacc
                             codePostalParam.Value = codePostal;
                             villeParam.Value = ville;
                             natureParam.Value = nature.ToLowerInvariant();
-                            rcsParam.Value = rcs.Replace(" ", "");
+                            rcsParam.Value = rcs.Replace(" ", "")
+                                    .Replace("\u00ef", "")
+                                    .Replace("\u00bf", "")
+                                    .Replace("\u00A0", "")
+                                    .Replace("\u00bd", "");
                             typeParam.Value = type.ToLowerInvariant();
                             formeParam.Value = forme.ToLowerInvariant();
-                            previousParam.Value = int.Parse(previous);
+                            previousPParam.Value = previousP;
+                            previousNParam.Value = previousA;
 
-                            ID += 1;
                             try
                             {
                                 command.ExecuteNonQuery();
                             }
                             catch (Exception e)
                             {
-                                Console.Error.WriteLine("cannot insert ID : {0} for numero : {1}", ID - 1, annonce.NumeroAnnonce);
+                                Console.Error.WriteLine("cannot insert numero {0} for parution {1}", annonce.NumeroAnnonce, parution);
                                 Console.Error.WriteLine(e.Message);
                             }
                         }

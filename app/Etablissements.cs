@@ -5,14 +5,13 @@ using System.Net;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Data.Sqlite;
+using Npgsql;
 
 namespace bodacc
 {
     // documentation : https://www.data.gouv.fr/fr/datasets/r/65946639-3150-4492-a988-944e2633531e
     public class SireneEtablissements
     {
-        const String DB_NAME = "bodacc.db";
         const String SIRENE_DIR = "SIRENE";
         const String LOCAL_ARCHIVE = "stock-etablissements.zip";
         const String LOCAL_FILENAME = "StockEtablissement_utf8.csv";
@@ -63,7 +62,7 @@ namespace bodacc
             {
                 if (forceUpdate)
                 {
-                    using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+                    using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
                     {
                         connection.Open();
                         using (var transaction = connection.BeginTransaction())
@@ -84,7 +83,7 @@ namespace bodacc
 
             using (var fileStream = File.OpenRead(Path.Combine(SIRENE_DIR, LOCAL_FILENAME)))
             using (var streamReader = new StreamReader(fileStream, Encoding.UTF8, true, 4096))
-            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
             {
                 connection.Open();
                 String head = streamReader.ReadLine();
@@ -102,37 +101,37 @@ namespace bodacc
                         INSERT INTO etablissements (SIRET, SIREN, ETATADMIN,EFFECTIFS,CP,VILLE,NOM,PAYS,VILLEETRANGER,ACTIVITE, NOMENCLATUREACTIVITE)
                         VALUES (@Siret,@Siren,@EtatAdmin,@Effectifs,@CP,@Ville,@Nom,@Pays1,@VilleEtranger1,@Activite, @NomAct)
                     ";
-                        var pSiret = new SqliteParameter();
+                        var pSiret = new NpgsqlParameter();
                         pSiret.ParameterName = "@Siret";
                         command.Parameters.Add(pSiret);
-                        var pSiren = new SqliteParameter();
+                        var pSiren = new NpgsqlParameter();
                         pSiren.ParameterName = "@Siren";
                         command.Parameters.Add(pSiren);
-                        var ptatAdmin = new SqliteParameter();
+                        var ptatAdmin = new NpgsqlParameter();
                         ptatAdmin.ParameterName = "@EtatAdmin";
                         command.Parameters.Add(ptatAdmin);
-                        var pEff = new SqliteParameter();
+                        var pEff = new NpgsqlParameter();
                         pEff.ParameterName = "@Effectifs";
                         command.Parameters.Add(pEff);
-                        var pCp = new SqliteParameter();
+                        var pCp = new NpgsqlParameter();
                         pCp.ParameterName = "@CP";
                         command.Parameters.Add(pCp);
-                        var pVille = new SqliteParameter();
+                        var pVille = new NpgsqlParameter();
                         pVille.ParameterName = "@Ville";
                         command.Parameters.Add(pVille);
-                        var pNom = new SqliteParameter();
+                        var pNom = new NpgsqlParameter();
                         pNom.ParameterName = "@Nom";
                         command.Parameters.Add(pNom);
-                        var pPays1 = new SqliteParameter();
+                        var pPays1 = new NpgsqlParameter();
                         pPays1.ParameterName = "@Pays1";
                         command.Parameters.Add(pPays1);
-                        var pVilleE = new SqliteParameter();
+                        var pVilleE = new NpgsqlParameter();
                         pVilleE.ParameterName = "@VilleEtranger1";
                         command.Parameters.Add(pVilleE);
-                        var pActivite = new SqliteParameter();
+                        var pActivite = new NpgsqlParameter();
                         pActivite.ParameterName = "@Activite";
                         command.Parameters.Add(pActivite);
-                        var pNomAct = new SqliteParameter();
+                        var pNomAct = new NpgsqlParameter();
                         pNomAct.ParameterName = "@NomAct";
                         command.Parameters.Add(pNomAct);
                         foreach (string line in lines)
@@ -155,8 +154,8 @@ namespace bodacc
                                 Console.WriteLine("etablissement sans siren -- ignored");
                                 continue;
                             }
-                            pSiren.Value = int.Parse(siren.Replace(" ", ""));
-                            pSiret.Value = long.Parse(siret.Replace(" ", ""));
+                            pSiren.Value = siren.Replace(" ", "");
+                            pSiret.Value = siret.Replace(" ", "");
                             ptatAdmin.Value = split[labels_indices["etatAdministratifEtablissement"]];
                             pEff.Value = split[labels_indices["trancheEffectifsEtablissement"]];
                             pCp.Value = split[labels_indices["codePostalEtablissement"]];
@@ -191,7 +190,7 @@ namespace bodacc
 
         private static bool Exists()
         {
-            using (var connection = new SqliteConnection(String.Format("Data Source={0}", DB_NAME)))
+            using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
             {
                 connection.Open();
                 using (var transaction = connection.BeginTransaction())
