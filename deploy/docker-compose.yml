@@ -4,16 +4,18 @@ services:
   postgre:
     environment:
       POSTGRES_DB: bodacc
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
+      POSTGRES_USER: ${ADMIN_USER}
+      POSTGRES_PASSWORD: ${ADMIN_PASSWORD}
+      POPULATE_PASSWORD: ${POPULATE_PASSWORD}
+      POSTGRE_HOST: ${POSTGRE_HOST}
     build:
       context: ..
       dockerfile: deploy/postgre/Dockerfile
     restart: always
     ports:
       - "5433:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+    # volumes:
+    #   - pgdata:/var/lib/postgresql/data
 
   # crawl:
   #   build:
@@ -23,5 +25,5 @@ services:
   #   depends_on:
   #   - postgre
 
-volumes: 
-  pgdata:
+# volumes: 
+#   pgdata:
