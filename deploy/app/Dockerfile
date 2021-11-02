@@ -19,9 +19,12 @@ FROM mcr.microsoft.com/dotnet/runtime:5.0-alpine as release
 
 RUN apk update
 COPY --from=vscode /code/app/bin/Release/net5.0/ /usr/local/bin/
-COPY app/plansde /etc/cron.d/plansde
+COPY deploy/app/plansde /etc/cron.d/plansde
 COPY INSEE /usr/local/bin/INSEE
+COPY deploy/app/wait-for-it.sh /usr/local/bin/
+COPY deploy/app/start.sh /usr/local/bin/
+RUN chmod 755 /usr/local/bin/wait-for-it.sh
+RUN chmod 755 /usr/local/bin/start.sh
 RUN chmod 0644 /etc/cron.d/plansde
 RUN crontab /etc/cron.d/plansde
 RUN touch /var/log/cron.log
-CMD crond && tail -f /var/log/cron.log

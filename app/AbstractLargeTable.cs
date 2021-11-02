@@ -27,9 +27,8 @@ namespace bodacc
                 }
             }
 
-            var buff_path = Path.Combine(Environment.CurrentDirectory, "buff.csv");
+            var buff_path = Path.GetTempFileName();
             File.WriteAllLines(buff_path, csv);
-
             using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
             {
                 connection.Open();
@@ -42,6 +41,8 @@ namespace bodacc
                     transaction.Commit();
                 }
             }
+
+            File.Delete(buff_path);
         }
 
         protected abstract String Transform(TRawData input);

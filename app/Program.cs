@@ -16,6 +16,7 @@ namespace bodacc
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("connection string : " + State.CONNECTION_STRING);
             GeoCodes.PopulateDB();
             CategoriesJuridiques.PopulateDB();
             Effectifs.PopulateDB();
