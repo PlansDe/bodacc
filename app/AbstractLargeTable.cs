@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Npgsql;
+using System.Diagnostics;
 
 namespace bodacc
 {
@@ -27,22 +28,32 @@ namespace bodacc
                 }
             }
 
-            var buff_path = Path.GetTempFileName();
+            var buff_path = Path.Combine("/usr/local/bin/tmp/", Path.GetRandomFileName());
+            buff_path = Path.ChangeExtension(buff_path, ".csv");
             File.WriteAllLines(buff_path, csv);
-            using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
+            try
             {
-                connection.Open();
-
-                using (var transaction = connection.BeginTransaction())
+                using (var connection = new NpgsqlConnection(State.CONNECTION_STRING))
                 {
-                    var command = connection.CreateCommand();
-                    command.CommandText = String.Format($"COPY {TABLE_NAME}({HEADER}) FROM '{buff_path}' CSV HEADER");
-                    command.ExecuteNonQuery();
-                    transaction.Commit();
+                    connection.Open();
+
+                    using (var transaction = connection.BeginTransaction())
+                    {
+                        var command = connection.CreateCommand();
+                        command.CommandText = String.Format($"COPY {TABLE_NAME}({HEADER}) FROM '{buff_path}' CSV HEADER");
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                    }
                 }
             }
-
-            File.Delete(buff_path);
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            finally
+            {
+                File.Delete(buff_path);
+            }
         }
 
         protected abstract String Transform(TRawData input);

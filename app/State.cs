@@ -7,9 +7,10 @@ namespace bodacc
     public class State
     {
         static string POSTGRE_HOST = Environment.GetEnvironmentVariable("POSTGRE_HOST");
+        static string POPULATE_USER = Environment.GetEnvironmentVariable("POPULATE_USER");
         static string POPULATE_PASSWORD = Environment.GetEnvironmentVariable("POPULATE_PASSWORD");
         public static String CONNECTION_STRING =
-            String.Format($"Server={POSTGRE_HOST};Port=5432;Database=bodacc;User ID=populate;Password={POPULATE_PASSWORD}");
+            String.Format($"Server={POSTGRE_HOST};Port=5432;Database=bodacc;User ID={POPULATE_USER};Password={POPULATE_PASSWORD}");
 
         public static BodaccState Bodacc { get; set; }
 

@@ -6,7 +6,6 @@ services:
       POSTGRES_DB: bodacc
       POSTGRES_USER: ${ADMIN_USER}
       POSTGRES_PASSWORD: ${ADMIN_PASSWORD}
-      POPULATE_PASSWORD: ${POPULATE_PASSWORD}
       POSTGRE_HOST: ${POSTGRE_HOST}
     build:
       context: ..
@@ -16,6 +15,7 @@ services:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - tmp:/usr/local/bin/tmp/
 
   crawl:
     build:
@@ -25,9 +25,11 @@ services:
     working_dir: /usr/local/bin/
     command: ["./wait-for-it.sh", "${POSTGRE_HOST}:5432", "--", "sh", "start.sh" ]
     environment:
+      POPULATE_USER: ${POPULATE_USER}
       POPULATE_PASSWORD: ${POPULATE_PASSWORD}
       POSTGRE_HOST: ${POSTGRE_HOST}
     volumes:
+      - tmp:/usr/local/bin/tmp/
       - type: bind
         source: ../INSEE
         target: /usr/local/bin/INSEE
@@ -42,3 +44,4 @@ services:
 
 volumes: 
   pgdata:
+  tmp: 

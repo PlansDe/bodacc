@@ -203,7 +203,7 @@ namespace bodacc
             var startInfo = new ProcessStartInfo
             {
                 WorkingDirectory = fileToDecompress.DirectoryName,
-                FileName = "/bin/bash",
+                FileName = "/bin/sh",
                 Arguments = String.Format(" -c \"tar {0} {1}\"", options, fileToDecompress.Name),
                 UseShellExecute = false,
                 CreateNoWindow = true,
