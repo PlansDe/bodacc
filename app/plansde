@@ -1,0 +1,1 @@
+* * * * *  cd /usr/local/bin && dotnet /usr/local/bin/app.dll >> /var/log/cron.log 2>&1

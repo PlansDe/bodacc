@@ -7,7 +7,7 @@ namespace bodacc
     public class State
     {
         // TODO: hide password in secret
-        public const String CONNECTION_STRING = "Server=172.22.0.2;Port=5432;Database=bodacc;User ID=populate;Password=88e359f4f79166de265d2a403e38e7d5";
+        public const String CONNECTION_STRING = "Server=postgre;Port=5432;Database=bodacc;User ID=populate;Password=88e359f4f79166de265d2a403e38e7d5";
 
         public static BodaccState Bodacc { get; set; }
 

@@ -15,18 +15,13 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  crawl:
-    build:
-      context: ../
-      dockerfile: deploy/app/Dockerfile
-      target: release
-    depends_on:
-    - postgre
-    volumes:
-      - sirendata:/code/SIREN
-      - bodaccdata:/code/BODACC
+  # crawl:
+  #   build:
+  #     context: ../
+  #     dockerfile: deploy/app/Dockerfile
+  #     target: release
+  #   depends_on:
+  #   - postgre
 
 volumes: 
   pgdata:
-  sirendata:
-  bodaccdata:

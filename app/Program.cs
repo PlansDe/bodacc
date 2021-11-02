@@ -28,7 +28,5 @@ namespace bodacc
             BodaccImport.DecompressData();
             BodaccImport.PopulateDB();
         }
-
-
     }
 }
