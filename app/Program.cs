@@ -20,13 +20,19 @@ namespace bodacc
             CategoriesJuridiques.PopulateDB();
             Effectifs.PopulateDB();
             CodesNaf.PopulateDB();
-            SireneUnitesLegales.DownloadData();
-            SireneUnitesLegales.PopulateDb(SireneUnitesLegales.Decompress());
-            SireneEtablissements.DownloadData();
-            SireneEtablissements.PopulateDb(SireneEtablissements.Decompress());
-            BodaccImport.DownloadData(2008);
-            BodaccImport.DecompressData();
-            BodaccImport.PopulateDB();
+
+            var sirene = new SireneUnitesLegales();
+            sirene.DownloadData();
+            sirene.PopulateDb(sirene.Decompress());
+
+            var etablissements = new SireneEtablissements();
+            etablissements.DownloadData();
+            etablissements.PopulateDb(etablissements.Decompress());
+
+            var annonces = new BodaccImport();
+            annonces.DownloadData(2008);
+            annonces.DecompressData();
+            annonces.PopulateDB();
         }
     }
 }

@@ -68,6 +68,7 @@ ON ALL TABLES IN SCHEMA public
 TO populate;
 
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO populate;
+GRANT pg_read_server_files TO populate;
 
 GRANT SELECT
 ON ALL TABLES IN SCHEMA public 

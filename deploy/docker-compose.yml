@@ -14,16 +14,19 @@ services:
     restart: always
     ports:
       - "5433:5432"
-    # volumes:
-    #   - pgdata:/var/lib/postgresql/data
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
-  # crawl:
-  #   build:
-  #     context: ../
-  #     dockerfile: deploy/app/Dockerfile
-  #     target: release
-  #   depends_on:
-  #   - postgre
+  crawl:
+    build:
+      context: ../
+      dockerfile: deploy/app/Dockerfile
+      target: release
+    environment:
+      POPULATE_PASSWORD: ${POPULATE_PASSWORD}
+      POSTGRE_HOST: ${POSTGRE_HOST}
+    depends_on:
+    - postgre
 
-# volumes: 
-#   pgdata:
+volumes: 
+  pgdata:
