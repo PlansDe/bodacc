@@ -61,7 +61,7 @@ namespace bodacc
             foreach (var directory in Directory.EnumerateDirectories(BODACC_DIR).OrderBy(d => d))
             {
                 var directoryName = new DirectoryInfo(directory).Name;
-                if (directoryName.CompareTo(last_year) > 0 || directory == String.Format($"BODACC/{DateTime.UtcNow.Year}"))
+                if (directoryName.CompareTo(last_year) > 0 || directoryName == DateTime.UtcNow.Year.ToString())
                 {
                     Console.WriteLine("extracting data in {0}", directory);
                     var di = new DirectoryInfo(directory);
@@ -295,6 +295,7 @@ namespace bodacc
                     if (!DateTime.TryParseExact(input, "d MMMM yyyy", french, styles, out parsed_date))
                     {
                         Console.WriteLine("cannot parse date : " + annonce.Jugement.Date);
+                        Console.WriteLine("cannot parse date (modified) : " + input);
                     }
                 }
 
@@ -319,18 +320,18 @@ namespace bodacc
             result.Append(parution).Append(",");
             result.Append(numeroAnnonce).Append(",");
             result.Append(date).Append(",");
-            result.Append(codePostal).Append(",");
-            result.Append(ville).Append(",");
-            result.Append(nature.ToLowerInvariant()).Append(",");
+            result.Append(codePostal.Replace(",", " ")).Append(",");
+            result.Append(ville.Replace(",", " ")).Append(",");
+            result.Append(nature.Replace(",", " ").ToLowerInvariant()).Append(",");
             result.Append(rcs.Replace(" ", "")
                     .Replace("\u00ef", "")
                     .Replace("\u00bf", "")
                     .Replace("\u00A0", "")
                     .Replace("\u00bd", "")).Append(",");
-            result.Append(type.ToLowerInvariant()).Append(",");
-            result.Append(forme.ToLowerInvariant()).Append(",");
+            result.Append(type.Replace(",", " ").ToLowerInvariant()).Append(",");
+            result.Append(forme.Replace(",", " ").ToLowerInvariant()).Append(",");
             result.Append(previousP).Append(",");
-            result.Append(previousA).Append(",");
+            result.Append(previousA);
             INSERT_COUNT += 1;
             return result.ToString();
         }

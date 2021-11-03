@@ -23,7 +23,7 @@ services:
       dockerfile: deploy/app/Dockerfile
       target: release
     working_dir: /usr/local/bin/
-    command: ["./wait-for-it.sh", "${POSTGRE_HOST}:5432", "--", "sh", "start.sh" ]
+    command: ["/usr/local/bin/wait-for-it.sh", "${POSTGRE_HOST}:5432", "--", "bash", "start.sh" ]
     environment:
       POPULATE_USER: ${POPULATE_USER}
       POPULATE_PASSWORD: ${POPULATE_PASSWORD}
