@@ -4,7 +4,7 @@ FROM builder as vscode
 WORKDIR /code
 
 RUN apk update 
-RUN apk add sqlite make 
+RUN apk add make 
 
 COPY app/ app/
 COPY tests/ tests/
@@ -23,7 +23,7 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 COPY --from=vscode /code/app/bin/Release/net5.0/ /usr/local/bin/
 COPY deploy/app/plansde /etc/cron.d/plansde
 COPY INSEE /usr/local/bin/INSEE
-COPY deploy/app/wait-for-it.sh /usr/local/bin/
+COPY deploy/wait-for-it.sh /usr/local/bin/
 COPY deploy/app/start.sh /usr/local/bin/
 RUN chmod 755 /usr/local/bin/wait-for-it.sh
 RUN chmod 755 /usr/local/bin/start.sh

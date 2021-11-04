@@ -41,6 +41,19 @@ services:
         target: /usr/local/bin/BODACC
     depends_on:
     - postgre
+  
+  node-api:
+    build:
+      context: ../
+      dockerfile: deploy/api/Dockerfile
+    working_dir: /usr/local/bin/
+    command: ["/usr/local/bin/wait-for-it.sh", "${POSTGRE_HOST}:5432", "--", "node", "index.js" ]
+    environment:
+      API_USER: ${API_USER}
+      API_PASSWORD: ${API_PASSWORD}
+      POSTGRE_HOST: ${POSTGRE_HOST}
+    depends_on:
+    - postgre
 
 volumes: 
   pgdata:
