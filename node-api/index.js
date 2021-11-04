@@ -29,4 +29,5 @@ app.get('/categoriesjuridiques', db.getCategoriesJuridiques);
 app.get('/categoriesjuridiques/:id', db.getCategoriesJuridiquesById);
 app.get('/etablissements/:codenaf', db.getEtablissementsByCodeNaf);
 app.get('/annonces/latests/:days', db.getLatestAnnonces);
+app.get('/liquidations', db.getLiquidations);
 app.use('/doc', swaggerUi.serve, swaggerUi.setup(swaggerFile));

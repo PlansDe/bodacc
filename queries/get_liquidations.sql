@@ -15,8 +15,5 @@ SELECT DATE from annonces
         NATURE = 'jugement de clôture pour insuffisance d''actif'
         OR NATURE = 'jugement de clôture de la liquidation des biens pour insuffisance d''actif'
         OR NATURE = 'jugement de clôture pour insuffisance d''actif et autorisant la reprise des poursuites individuelles'
-        OR NATURE = 'jugement de conversion en liquidation judiciaire de la procédure de sauvegarde'
-        OR NATURE = 'jugement autorisant la reprise des poursuites individuelles des créanciers'
-        OR NATURE = 'jugement de conversion en liquidation judiciaire de la procédure de sauvegarde financière accélérée'
     )
     ORDER BY EFFECTIFS DESC;

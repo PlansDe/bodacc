@@ -199,13 +199,12 @@ const getLiquidations = (request, response) => {
     // #swagger.description = 'renvoie les liquidations judiciaires concernant les entreprises de plus de 2 salariés hors SCI ou sociétés unipersonnelles - depuis 2008'
 
     const query = `SELECT DATE from annonces
+    LEFT JOIN uniteslegales
+    ON annonces.RCS = uniteslegales.SIREN
     WHERE DATE >= '2008-01-01'
-    AND DATE <= NOW() -- some dates are crawy (2129 and so on)
-    -- plus de deux employés
+    AND DATE <= NOW()
     AND uniteslegales.EFFECTIFS != 'NN'
     AND uniteslegales.EFFECTIFS >= '01'
-    -- filtrer les entreprises individuelles
-    AND uniteslegales.CATEGORIEJURIDIQUE != '1000'
     -- filtrer les sociétés civiles immobilières
     AND uniteslegales.CATEGORIEJURIDIQUE != '6540'
     AND uniteslegales.CATEGORIEJURIDIQUE != '6541'
@@ -213,18 +212,11 @@ const getLiquidations = (request, response) => {
     AND uniteslegales.CATEGORIEJURIDIQUE != '6543'
     AND uniteslegales.CATEGORIEJURIDIQUE != '6544'
     AND (
-        NATURE = 'jugement d''ouverture de liquidation judiciaire'
-        OR NATURE = 'jugement de clôture pour insuffisance d''actif'
-        OR NATURE = 'jugement de conversion en liquidation judiciaire'
-        OR NATURE = 'jugement d''extension de liquidation judiciaire'
+        NATURE = 'jugement de clôture pour insuffisance d''actif'
         OR NATURE = 'jugement de clôture de la liquidation des biens pour insuffisance d''actif'
-        OR NATURE = 'jugement d''extension d''une procédure de redressement judiciaire'
         OR NATURE = 'jugement de clôture pour insuffisance d''actif et autorisant la reprise des poursuites individuelles'
-        OR NATURE = 'jugement de conversion en liquidation judiciaire de la procédure de sauvegarde'
-        OR NATURE = 'jugement autorisant la reprise des poursuites individuelles des créanciers'
-        OR NATURE = 'jugement de conversion en liquidation judiciaire de la procédure de sauvegarde financière accélérée'
     )
-    ORDER BY DATE ASC;
+    ORDER BY EFFECTIFS DESC;
 `;
 
     pool.query(query, [], (error, results) => {
@@ -248,4 +240,5 @@ module.exports = {
     getCategoriesJuridiquesById,
     getEtablissementsByCodeNaf,
     getLatestAnnonces,
+    getLiquidations,
 };
