@@ -1,1 +1,1 @@
-ADMIN_USER=postgres ADMIN_PASSWORD=postgres POPULATE_PASSWORD=88e359f4f79166de265d2a403e38e7d5 POSTGRE_HOST=localhost dotnet run --project app
+ADMIN_USER=postgres POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=bodacc ADMIN_PASSWORD=postgres POPULATE_PASSWORD=88e359f4f79166de265d2a403e38e7d5 POSTGRE_HOST=localhost dotnet run --project app

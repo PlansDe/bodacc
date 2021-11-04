@@ -30,7 +30,7 @@ namespace bodacc
             etablissements.PopulateDb(etablissements.Decompress());
 
             var annonces = new BodaccImport();
-            annonces.DownloadData(2008);
+            //annonces.DownloadData(2008);
             annonces.DecompressData();
             annonces.PopulateDB();
         }

@@ -18,7 +18,6 @@ namespace bodacc
 
         public SireneEtablissements()
         {
-            INSERT_COUNT = 0;
         }
 
         protected override string TABLE_NAME => "etablissements";

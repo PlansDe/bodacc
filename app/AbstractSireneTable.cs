@@ -86,9 +86,8 @@ namespace bodacc
                 while (streamReader.ReadLines(100000, lines) != 0)
                 {
                     Commit(lines);
-                    INSERT_COUNT += lines.Count;
-                    Console.Write($"\r{INSERT_COUNT} rows inserted");
                 }
+
                 Console.WriteLine($"\n{TABLE_NAME} fully populated");
             }
         }

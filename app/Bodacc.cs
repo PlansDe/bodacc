@@ -96,6 +96,7 @@ namespace bodacc
                     PopulateDBYear(subDirectory, year);
                 }
             }
+
             Console.WriteLine($"\n{TABLE_NAME} fully populated");
         }
 
@@ -175,11 +176,6 @@ namespace bodacc
             {
                 Decompress(new FileInfo(file), "xf");
             }
-            var zip = Directory.GetFiles(directory, "*.zip");
-            foreach (var file in zip)
-            {
-                Decompress(new FileInfo(file));
-            }
 
             // clean (archive structures change year after year)
             foreach (var file in Directory.EnumerateFiles(directory, "PCL_BXA*", SearchOption.AllDirectories))
@@ -201,6 +197,10 @@ namespace bodacc
             foreach (var file in taz.Where(f => f.EndsWith(".taz")))
             {
                 Decompress(new FileInfo(file), "xzf");
+            }
+            foreach (var file in taz.Where(f => f.EndsWith(".zip")))
+            {
+                Decompress(new FileInfo(file));
             }
         }
 
@@ -252,7 +252,6 @@ namespace bodacc
                 if (State.Bodacc.LastParution.CompareTo(parution) <= 0)
                 {
                     Commit(bulletin.Annonces.Annonce);
-                    Console.Write($"\r{INSERT_COUNT} rows inserted");
                 }
             }
         }
@@ -361,7 +360,6 @@ namespace bodacc
             result.Append(forme.Replace(",", " ").ToLowerInvariant()).Append(",");
             result.Append(previousP).Append(",");
             result.Append(previousA);
-            INSERT_COUNT += 1;
             return result.ToString();
         }
     }

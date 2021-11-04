@@ -13,7 +13,7 @@ namespace bodacc
 
         protected abstract String HEADER { get; }
 
-        protected int INSERT_COUNT { get; set; }
+        private int INSERT_COUNT { get; set; }
 
         protected void Commit(IEnumerable<TRawData> inputs)
         {
@@ -24,6 +24,7 @@ namespace bodacc
                 var transformed = Transform(line);
                 if (!String.IsNullOrEmpty(transformed))
                 {
+                    INSERT_COUNT++;
                     csv.Add(transformed);
                 }
             }
@@ -43,6 +44,7 @@ namespace bodacc
                         command.CommandText = String.Format($"COPY {TABLE_NAME}({HEADER}) FROM '{buff_path}' CSV HEADER");
                         command.ExecuteNonQuery();
                         transaction.Commit();
+                        Console.Write($"{INSERT_COUNT} rows inserted");
                     }
                 }
             }

@@ -24,7 +24,6 @@ namespace bodacc
 
         public SireneUnitesLegales()
         {
-            INSERT_COUNT = 0;
         }
 
         protected override string Transform(string line)
