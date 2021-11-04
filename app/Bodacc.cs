@@ -321,7 +321,7 @@ namespace bodacc
             result.Append(numeroAnnonce).Append(",");
             result.Append(date).Append(",");
             result.Append(codePostal.Replace(",", " ")).Append(",");
-            result.Append(ville.Replace(",", " ")).Append(",");
+            result.Append(ville.Replace(",", " ").Replace("\"", "\'")).Append(",");
             result.Append(nature.Replace(",", " ").ToLowerInvariant()).Append(",");
             result.Append(rcs.Replace(" ", "")
                     .Replace("\u00ef", "")
