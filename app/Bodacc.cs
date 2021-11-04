@@ -214,7 +214,7 @@ namespace bodacc
 
         static void Decompress(FileInfo fileToDecompress, string options = "")
         {
-            if (fileToDecompress.Extension.EndsWith("taz"))
+            if (fileToDecompress.Extension.EndsWith("taz") || fileToDecompress.Extension.EndsWith("tar"))
             {
                 var startInfo = new ProcessStartInfo
                 {
