@@ -16,7 +16,7 @@ namespace bodacc
             foreach (var line in File.ReadAllLines(Path.Combine("INSEE", "codes_naf.csv")))
             {
                 var split = line.Split(',');
-                codes.Add(split[0], split[1]);
+                codes.Add(split[0], String.Join(",", split.Skip(1)));
             }
         }
 
