@@ -11,8 +11,6 @@ services:
       context: ..
       dockerfile: deploy/postgre/Dockerfile
     restart: always
-    ports:
-      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - tmp:/usr/local/bin/tmp/
@@ -52,6 +50,9 @@ services:
       API_USER: ${API_USER}
       API_PASSWORD: ${API_PASSWORD}
       POSTGRE_HOST: ${POSTGRE_HOST}
+    restart: always
+    ports: 
+      - "9000:3000"
     depends_on:
     - postgre
 
