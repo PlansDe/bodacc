@@ -72,6 +72,46 @@ const getCodeNafByName = (request, response) => {
     });
 };
 
+const getEffectifs = (request, response) => {
+    pool.query('SELECT * FROM effectifs', [], (error, results) => {
+        if (error) {
+            response.status(500).json(error.message);
+        }
+        response.status(200).json(results?.rows);
+    })
+};
+
+const getEffectifsById = (request, response) => {
+    var id = parseInt(request.params.id);
+    pool.query('SELECT * FROM effectifs WHERE CODE = $1', [id], (error, results) => {
+        if (error) {
+            response.status(500).json(error.message);
+        }
+        response.status(200).json(results?.rows);
+    })
+};
+
+
+
+const getCategoriesJuridiques = (request, response) => {
+    pool.query('SELECT * FROM categoriesjuridiques', [], (error, results) => {
+        if (error) {
+            response.status(500).json(error.message);
+        }
+        response.status(200).json(results?.rows);
+    })
+};
+
+const getCategoriesJuridiquesById = (request, response) => {
+    var id = parseInt(request.params.id);
+    pool.query('SELECT * FROM categoriesjuridiques WHERE CODE = $1', [id], (error, results) => {
+        if (error) {
+            response.status(500).json(error.message);
+        }
+        response.status(200).json(results?.rows);
+    })
+};
+
 const getEtablissementsByCodeNaf = (request, response) => {
     const codenaf = request.params.codenaf;
     const query = `SELECT  etablissements.SIREN,
@@ -106,9 +146,14 @@ const getEtablissementsByCodeNaf = (request, response) => {
 
 const getLatestAnnonces = (request, response) => {
 
-    // #swagger.description = 'renvoie les liquidations judiciaires concernant les entreprises de plus de 2 salariés n'étant pas des SCI ou des sociétés unipersonnelles'
+    // #swagger.description = 'renvoie les liquidations judiciaires concernant les entreprises de plus de 2 salariés hors SCI ou sociétés unipersonnelles - max 60 jours'
 
     const days = parseInt(request.params.days);
+    if (days >= 60) {
+        response.status(401).json("too many data requested");
+        return;
+    }
+
     const query = `SELECT DISTINCT(RCS),DATE,EFFECTIFS, NATURE from annonces
     LEFT JOIN uniteslegales
     ON annonces.RCS = uniteslegales.SIREN
@@ -155,6 +200,10 @@ module.exports = {
     getCodesNaf,
     getCodeNafById,
     getCodeNafByName,
+    getEffectifs,
+    getEffectifsById,
+    getCategoriesJuridiques,
+    getCategoriesJuridiquesById,
     getEtablissementsByCodeNaf,
     getLatestAnnonces,
 };

@@ -19,6 +19,7 @@ FROM mcr.microsoft.com/dotnet/runtime:5.0-alpine as release
 
 RUN apk update
 RUN apk add --no-cache icu-libs
+RUN apk add --no-cache unzip
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 COPY --from=vscode /code/app/bin/Release/net5.0/ /usr/local/bin/
 COPY deploy/app/plansde /etc/cron.d/plansde

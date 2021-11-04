@@ -29,16 +29,16 @@ namespace bodacc
         static State()
         {
             Bodacc = new BodaccState();
-            using (var connection = new NpgsqlConnection(CONNECTION_STRING))
+            try
             {
-                connection.Open();
-                var command = connection.CreateCommand();
-                command.CommandText = @"
+                using (var connection = new NpgsqlConnection(CONNECTION_STRING))
+                {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+                    command.CommandText = @"
                         SELECT PARUTION,NUMERO from annonces 
                             ORDER BY PARUTION DESC, NUMERO DESC
                             LIMIT 1";
-                try
-                {
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -48,10 +48,10 @@ namespace bodacc
                         }
                     }
                 }
-                catch
-                {
-                    Console.WriteLine("cannot initialize bodacc state -- annonces table empty");
-                }
+            }
+            catch
+            {
+                Console.WriteLine("cannot initialize bodacc state -- annonces table empty");
             }
         }
     }

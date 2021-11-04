@@ -2,15 +2,12 @@ using System;
 
 using System.Globalization;
 using System.IO;
-using System.IO.Compression;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Xml;
 using System.Xml.Serialization;
 using System.Diagnostics;
 using System.Text;
-using Npgsql;
 
 namespace bodacc
 {
@@ -26,7 +23,7 @@ namespace bodacc
         const String BODACC_DIR = "BODACC";
         const String REMOTE_FILE_FORMAT_2021 = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/{0:D4}/PCL_BXA{0:D4}{1:D4}.taz";
         // 2017 - 2021
-        const String REMOTE_FILE_FORMAT_HISTORY = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/FluxHistorique/{0:D4}/PCL_BXA{0:D4}{1:D4}.taz";
+        const String REMOTE_FILE_FORMAT_HISTORY = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/FluxHistorique/{0:D4}/PCL_BXA{0:D4}{1:D4}.{2}";
         // 2008 - 2021
         const String REMOTE_ARCHIVE_HISTO = "https://echanges.dila.gouv.fr/OPENDATA/BODACC/FluxHistorique/BODACC_{0:D4}.tar";
 
@@ -138,24 +135,36 @@ namespace bodacc
 
             while (true)
             {
-                var file_name = String.Format("PCL_BXA{0:D4}{1:D4}.taz", year, file_id);
-                var long_file_name = Path.Combine(local_dir, file_name);
-                if (!File.Exists(long_file_name) || override_condition(file_name))
+                try
                 {
-                    var remote_file = String.Format(remote_file_format, year, file_id);
+                    DownloadRecentFile(client, local_dir, remote_file_format, override_condition, year, file_id, "taz");
+                }
+                catch (Exception)
+                {
                     try
                     {
-                        client.DownloadFile(remote_file, long_file_name);
+                        DownloadRecentFile(client, local_dir, remote_file_format, override_condition, year, file_id, "zip");
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
-                        Console.Error.WriteLine("download error for {0}", remote_file);
-                        Console.Error.WriteLine(e.Message);
+                        Console.Error.WriteLine("exception -- done");
                         break;
                     }
                 }
 
                 file_id++;
+            }
+        }
+
+        void DownloadRecentFile(WebClient client, String local_dir, String remote_file_format, Func<String, bool> override_condition, int year, int file_id, string extension)
+        {
+            var file_name = String.Format("PCL_BXA{0:D4}{1:D4}.{2}", year, file_id, extension);
+            var long_file_name = Path.Combine(local_dir, file_name);
+            if (!File.Exists(long_file_name) || override_condition(file_name))
+            {
+                var remote_file = String.Format(remote_file_format, year, file_id, extension);
+                Console.Write($"\rtrying to download {remote_file}");
+                client.DownloadFile(remote_file, long_file_name);
             }
         }
 
@@ -165,6 +174,11 @@ namespace bodacc
             foreach (var file in tar)
             {
                 Decompress(new FileInfo(file), "xf");
+            }
+            var zip = Directory.GetFiles(directory, "*.zip");
+            foreach (var file in zip)
+            {
+                Decompress(new FileInfo(file));
             }
 
             // clean (archive structures change year after year)
@@ -198,17 +212,32 @@ namespace bodacc
             }
         }
 
-        static void Decompress(FileInfo fileToDecompress, string options)
+        static void Decompress(FileInfo fileToDecompress, string options = "")
         {
-            var startInfo = new ProcessStartInfo
+            if (fileToDecompress.Extension.EndsWith("taz"))
             {
-                WorkingDirectory = fileToDecompress.DirectoryName,
-                FileName = "/bin/sh",
-                Arguments = String.Format(" -c \"tar {0} {1}\"", options, fileToDecompress.Name),
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            Process.Start(startInfo).WaitForExit();
+                var startInfo = new ProcessStartInfo
+                {
+                    WorkingDirectory = fileToDecompress.DirectoryName,
+                    FileName = "/bin/sh",
+                    Arguments = String.Format(" -c \"tar {0} {1}\"", options, fileToDecompress.Name),
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                };
+                Process.Start(startInfo).WaitForExit();
+            }
+            else if (fileToDecompress.Extension.EndsWith("zip"))
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    WorkingDirectory = fileToDecompress.DirectoryName,
+                    FileName = "/bin/sh",
+                    Arguments = String.Format(" -c \"unzip {0}\"", fileToDecompress.Name),
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                };
+                Process.Start(startInfo).WaitForExit();
+            }
         }
 
         void DBProcessFile(String file, int year)

@@ -7,7 +7,7 @@ const endpointsFiles = ['./index.js']
 const doc = {
     info: {
         title: 'PLANSDE',
-        description: 'Description',
+        description: 'This API exposes parts of SIRENE and BODACC public databases',
     },
     host: '',
     schemes: ['http'],
