@@ -44,7 +44,7 @@ namespace bodacc
                         command.CommandText = String.Format($"COPY {TABLE_NAME}({HEADER}) FROM '{buff_path}' CSV HEADER");
                         command.ExecuteNonQuery();
                         transaction.Commit();
-                        Console.Write($"{INSERT_COUNT} rows inserted");
+                        Console.Write($"\r{INSERT_COUNT} rows inserted");
                     }
                 }
             }
