@@ -4,3 +4,5 @@ bin/
 bodacc.db
 BODACC/
 SIRENE/
+
+node-api/node_modules/
