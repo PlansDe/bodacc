@@ -43,8 +43,8 @@ namespace bodacc
                     {
                         while (reader.Read())
                         {
-                            Bodacc.LastParution = reader.GetString(1);
-                            Bodacc.LastNumero = reader.GetString(2);
+                            Bodacc.LastParution = reader.GetString(0);
+                            Bodacc.LastNumero = reader.GetString(1);
                         }
                     }
                 }

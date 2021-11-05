@@ -1,18 +1,6 @@
-﻿using System;
-using System.Globalization;
-using System.IO;
-using System.IO.Compression;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Xml;
-using System.Xml.Serialization;
-using System.Diagnostics;
-
-namespace bodacc
+﻿namespace bodacc
 {
-
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {

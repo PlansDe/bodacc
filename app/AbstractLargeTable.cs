@@ -19,14 +19,10 @@ namespace bodacc
         {
             List<String> csv = new List<string>();
             csv.Add(HEADER);
-            foreach (var line in inputs)
+            foreach (var line in Transform(inputs))
             {
-                var transformed = Transform(line);
-                if (!String.IsNullOrEmpty(transformed))
-                {
-                    INSERT_COUNT++;
-                    csv.Add(transformed);
-                }
+                INSERT_COUNT++;
+                csv.Add(line);
             }
 
             var buff_path = Path.Combine("/usr/local/bin/tmp/", Path.GetRandomFileName());
@@ -58,7 +54,7 @@ namespace bodacc
             }
         }
 
-        protected abstract String Transform(TRawData input);
+        protected abstract IEnumerable<String> Transform(IEnumerable<TRawData> input);
 
         protected bool Exists()
         {

@@ -26,38 +26,41 @@ namespace bodacc
         {
         }
 
-        protected override string Transform(string line)
+        protected override IEnumerable<String> Transform(IEnumerable<String> lines)
         {
-            StringBuilder result = new StringBuilder();
-            var split = SireneCsvReader.ReadLine(line);
-            if (split.Length != labels.Length)
+            foreach (var line in lines)
             {
-                Console.Error.WriteLine("cannot parse unitelegale : " + line);
-                return "";
-            }
-            string siren = split[label_indices["siren"]];
-            if (String.IsNullOrWhiteSpace(siren))
-            {
-                Console.WriteLine("unite legale sans siren -- ignored");
-                return "";
-            }
+                StringBuilder result = new StringBuilder();
+                var split = SireneCsvReader.ReadLine(line);
+                if (split.Length != labels.Length)
+                {
+                    Console.Error.WriteLine("cannot parse unitelegale : " + line);
+                    continue;
+                }
+                string siren = split[label_indices["siren"]];
+                if (String.IsNullOrWhiteSpace(siren))
+                {
+                    Console.WriteLine("unite legale sans siren -- ignored");
+                    continue;
+                }
 
 
-            var categorieJuridique = split[label_indices["categorieJuridiqueUniteLegale"]];
-            var nom = split[label_indices["denominationUniteLegale"]];
-            if (categorieJuridique == "1000" && String.IsNullOrWhiteSpace(nom))
-            {
-                nom = split[label_indices["prenom1UniteLegale"]] + " " + split[label_indices["nomUniteLegale"]];
-            }
+                var categorieJuridique = split[label_indices["categorieJuridiqueUniteLegale"]];
+                var nom = split[label_indices["denominationUniteLegale"]];
+                if (categorieJuridique == "1000" && String.IsNullOrWhiteSpace(nom))
+                {
+                    nom = split[label_indices["prenom1UniteLegale"]] + " " + split[label_indices["nomUniteLegale"]];
+                }
 
-            // "SIREN,NOM,EFFECTIFS,ACTIVITE,CATEGORIEJURIDIQUE,NOMENCLATUREACTIVITE";
-            result.Append(siren).Append(",");
-            result.Append(nom).Append(",");
-            result.Append(split[label_indices["trancheEffectifsUniteLegale"]]).Append(",");
-            result.Append(split[label_indices["activitePrincipaleUniteLegale"]]).Append(",");
-            result.Append(categorieJuridique).Append(",");
-            result.Append(split[label_indices["nomenclatureActivitePrincipaleUniteLegale"]]);
-            return result.ToString();
+                // "SIREN,NOM,EFFECTIFS,ACTIVITE,CATEGORIEJURIDIQUE,NOMENCLATUREACTIVITE";
+                result.Append(siren).Append(",");
+                result.Append(nom).Append(",");
+                result.Append(split[label_indices["trancheEffectifsUniteLegale"]]).Append(",");
+                result.Append(split[label_indices["activitePrincipaleUniteLegale"]]).Append(",");
+                result.Append(categorieJuridique).Append(",");
+                result.Append(split[label_indices["nomenclatureActivitePrincipaleUniteLegale"]]);
+                yield return result.ToString();
+            }
         }
     }
 }

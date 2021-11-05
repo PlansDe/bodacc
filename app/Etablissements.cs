@@ -24,50 +24,53 @@ namespace bodacc
 
         protected override string HEADER => "SIRET, SIREN, ETATADMIN,EFFECTIFS,CP,VILLE,NOM,PAYS,VILLEETRANGER,ACTIVITE, NOMENCLATUREACTIVITE";
 
-        protected override string Transform(string line)
+        protected override IEnumerable<String> Transform(IEnumerable<String> lines)
         {
-            var split = SireneCsvReader.ReadLine(line);
-            if (split.Length != labels.Length)
+            foreach (var line in lines)
             {
-                Console.Error.WriteLine("cannot parse etablissement : " + line);
-                return "";
-            }
-            var siret = split[label_indices["siret"]];
-            if (String.IsNullOrEmpty(siret))
-            {
-                Console.WriteLine("etablissement sans siret -- ignored");
-                return "";
-            }
-            var siren = split[label_indices["siren"]];
-            if (String.IsNullOrEmpty(siren))
-            {
-                Console.WriteLine("etablissement sans siren -- ignored");
-                return "";
-            }
-
-            // (@Siret,@Siren,@EtatAdmin,@Effectifs,@CP,@Ville,@Nom,@Pays1,@VilleEtranger1,@Activite, @NomAct)
-            StringBuilder result = new StringBuilder();
-            result.Append(siret.Replace(" ", "")).Append(",");
-            result.Append(siren.Replace(" ", "")).Append(",");
-            result.Append(split[label_indices["etatAdministratifEtablissement"]]).Append(",");
-            result.Append(split[label_indices["trancheEffectifsEtablissement"]]).Append(",");
-            result.Append(split[label_indices["codePostalEtablissement"]]).Append(",");
-            result.Append(split[label_indices["libelleCommuneEtablissement"]]).Append(",");
-            var nom = split[label_indices["denominationUsuelleEtablissement"]];
-            if (String.IsNullOrEmpty(nom))
-            {
-                nom = split[label_indices["enseigne1Etablissement"]];
-                if (!String.IsNullOrEmpty(nom))
+                var split = SireneCsvReader.ReadLine(line);
+                if (split.Length != labels.Length)
                 {
-                    nom = nom + "...";
+                    Console.Error.WriteLine("cannot parse etablissement : " + line);
+                    continue;
                 }
+                var siret = split[label_indices["siret"]];
+                if (String.IsNullOrEmpty(siret))
+                {
+                    Console.WriteLine("etablissement sans siret -- ignored");
+                    continue;
+                }
+                var siren = split[label_indices["siren"]];
+                if (String.IsNullOrEmpty(siren))
+                {
+                    Console.WriteLine("etablissement sans siren -- ignored");
+                    continue;
+                }
+
+                // (@Siret,@Siren,@EtatAdmin,@Effectifs,@CP,@Ville,@Nom,@Pays1,@VilleEtranger1,@Activite, @NomAct)
+                StringBuilder result = new StringBuilder();
+                result.Append(siret.Replace(" ", "")).Append(",");
+                result.Append(siren.Replace(" ", "")).Append(",");
+                result.Append(split[label_indices["etatAdministratifEtablissement"]]).Append(",");
+                result.Append(split[label_indices["trancheEffectifsEtablissement"]]).Append(",");
+                result.Append(split[label_indices["codePostalEtablissement"]]).Append(",");
+                result.Append(split[label_indices["libelleCommuneEtablissement"]]).Append(",");
+                var nom = split[label_indices["denominationUsuelleEtablissement"]];
+                if (String.IsNullOrEmpty(nom))
+                {
+                    nom = split[label_indices["enseigne1Etablissement"]];
+                    if (!String.IsNullOrEmpty(nom))
+                    {
+                        nom = nom + "...";
+                    }
+                }
+                result.Append(nom).Append(",");
+                result.Append(split[label_indices["codePaysEtrangerEtablissement"]]).Append(",");
+                result.Append(split[label_indices["libelleCommuneEtrangerEtablissement"]]).Append(",");
+                result.Append(split[label_indices["activitePrincipaleEtablissement"]]).Append(",");
+                result.Append(split[label_indices["nomenclatureActivitePrincipaleEtablissement"]]);
+                yield return result.ToString();
             }
-            result.Append(nom).Append(",");
-            result.Append(split[label_indices["codePaysEtrangerEtablissement"]]).Append(",");
-            result.Append(split[label_indices["libelleCommuneEtrangerEtablissement"]]).Append(",");
-            result.Append(split[label_indices["activitePrincipaleEtablissement"]]).Append(",");
-            result.Append(split[label_indices["nomenclatureActivitePrincipaleEtablissement"]]);
-            return result.ToString();
         }
     }
 }

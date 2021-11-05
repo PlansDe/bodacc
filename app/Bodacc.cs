@@ -8,16 +8,16 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Diagnostics;
 using System.Text;
+using System.Collections.Generic;
 
 namespace bodacc
 {
     public class BodaccImport : AbstractLargeTable<Annonce>
     {
-        private State state;
 
         public BodaccImport()
         {
-            state = new State();
+            Console.WriteLine($"bodacc state : last parution {State.Bodacc.LastParution} last numero {State.Bodacc.LastNumero}");
         }
 
         const String BODACC_DIR = "BODACC";
@@ -232,7 +232,7 @@ namespace bodacc
                 {
                     WorkingDirectory = fileToDecompress.DirectoryName,
                     FileName = "/bin/sh",
-                    Arguments = String.Format(" -c \"unzip {0}\"", fileToDecompress.Name),
+                    Arguments = String.Format(" -c \"unzip -o {0}\"", fileToDecompress.Name),
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 };
@@ -274,93 +274,96 @@ namespace bodacc
             return stringBuilder.ToString().Normalize(NormalizationForm.FormC);
         }
 
-        protected override string Transform(Annonce annonce)
+        protected override IEnumerable<String> Transform(IEnumerable<Annonce> annonces)
         {
-            var numeroAnnonce = annonce.NumeroAnnonce;
-            if (State.Bodacc.LastNumero.CompareTo(numeroAnnonce) >= 0)
+            foreach (var annonce in annonces)
             {
-                return "";
-            }
-
-            StringBuilder result = new StringBuilder();
-
-            var codePostal = "";
-            var ville = "";
-            if (annonce.Adresse != null && annonce.Adresse.Any())
-            {
-                var france = annonce.Adresse.First().France;
-                if (france != null)
+                var numeroAnnonce = annonce.NumeroAnnonce;
+                if (State.Bodacc.LastNumero.CompareTo(numeroAnnonce) >= 0)
                 {
-                    if (france.CodePostal != null)
-                        codePostal = annonce.Adresse.First().France.CodePostal;
-                    if (france.Ville != null)
-                        ville = france.Ville;
+                    continue;
                 }
-            }
 
-            var rcs = annonce.NumeroImmatriculation.Any() ? annonce.NumeroImmatriculation.First().NumeroIdentificationRCS : "inconnu";
-            var previousA = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
-            var previousP = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroParution;
-            var type = annonce.TypeAnnonce.Creation != null ? "creation" :
-                           (annonce.TypeAnnonce.Rectificatif != null ? "rectificatif" : "");
-            DateTime date = default(DateTime);
-            var french = CultureInfo.GetCultureInfo("fr-FR");
-            var styles = DateTimeStyles.AllowInnerWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite;
-            if (annonce.Jugement != null && !String.IsNullOrWhiteSpace(annonce.Jugement.Date))
-            {
-                // TODO: fix encoding issues !!!
-                var input = annonce.Jugement.Date
-                    .Replace("1er", "1")
-                    .Replace('\u00ef', ' ')
-                    .Replace('\u00bf', ' ')
-                    .Replace('\u00bd', ' ')
-                    .Replace("f   evrier", "février")
-                    .Replace("ao   t", "août")
-                    .Replace("d   cembre", "décembre");
-                DateTime parsed_date;
-                if (!DateTime.TryParseExact(input, "yyyy-MM-dd", CultureInfo.InvariantCulture, styles, out parsed_date))
+                StringBuilder result = new StringBuilder();
+
+                var codePostal = "";
+                var ville = "";
+                if (annonce.Adresse != null && annonce.Adresse.Any())
                 {
-                    if (!DateTime.TryParseExact(input, "d MMMM yyyy", french, styles, out parsed_date))
+                    var france = annonce.Adresse.First().France;
+                    if (france != null)
                     {
-                        Console.WriteLine("cannot parse date : " + annonce.Jugement.Date);
-                        Console.WriteLine("cannot parse date (modified) : " + input);
+                        if (france.CodePostal != null)
+                            codePostal = annonce.Adresse.First().France.CodePostal;
+                        if (france.Ville != null)
+                            ville = france.Ville;
                     }
                 }
 
-                date = parsed_date;
-            }
+                var rcs = annonce.NumeroImmatriculation.Any() ? annonce.NumeroImmatriculation.First().NumeroIdentificationRCS : "inconnu";
+                var previousA = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroAnnonce;
+                var previousP = annonce.ParutionAvisPrecedent == null ? "-1" : annonce.ParutionAvisPrecedent.NumeroParution;
+                var type = annonce.TypeAnnonce.Creation != null ? "creation" :
+                               (annonce.TypeAnnonce.Rectificatif != null ? "rectificatif" : "");
+                DateTime date = default(DateTime);
+                var french = CultureInfo.GetCultureInfo("fr-FR");
+                var styles = DateTimeStyles.AllowInnerWhite | DateTimeStyles.AllowLeadingWhite | DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AllowTrailingWhite;
+                if (annonce.Jugement != null && !String.IsNullOrWhiteSpace(annonce.Jugement.Date))
+                {
+                    // TODO: fix encoding issues !!!
+                    var input = annonce.Jugement.Date
+                        .Replace("1er", "1")
+                        .Replace('\u00ef', ' ')
+                        .Replace('\u00bf', ' ')
+                        .Replace('\u00bd', ' ')
+                        .Replace("f   evrier", "février")
+                        .Replace("ao   t", "août")
+                        .Replace("d   cembre", "décembre");
+                    DateTime parsed_date;
+                    if (!DateTime.TryParseExact(input, "yyyy-MM-dd", CultureInfo.InvariantCulture, styles, out parsed_date))
+                    {
+                        if (!DateTime.TryParseExact(input, "d MMMM yyyy", french, styles, out parsed_date))
+                        {
+                            Console.WriteLine("cannot parse date : " + annonce.Jugement.Date);
+                            Console.WriteLine("cannot parse date (modified) : " + input);
+                        }
+                    }
 
-            var nature = "";
-            if (annonce.Jugement != null && annonce.Jugement.Nature != null)
-            {
-                if (annonce.Jugement.Nature != null)
-                    nature = annonce.Jugement.Nature;
-            }
+                    date = parsed_date;
+                }
 
-            var forme = "";
-            if (annonce.PersonneMorale != null && annonce.PersonneMorale.Any())
-            {
-                if (annonce.PersonneMorale.First().FormeJuridique != null)
-                    forme = annonce.PersonneMorale.First().FormeJuridique;
-            }
+                var nature = "";
+                if (annonce.Jugement != null && annonce.Jugement.Nature != null)
+                {
+                    if (annonce.Jugement.Nature != null)
+                        nature = annonce.Jugement.Nature;
+                }
 
-            // PARUTION,NUMERO,DATE, CODEPOSTAL,VILLE,NATURE,RCS,TYPE,FORMEJURIDIQUE, PREVIOUS_PARUTION,PREVIOUS_NUMERO
-            result.Append(parution).Append(",");
-            result.Append(numeroAnnonce).Append(",");
-            result.Append(date).Append(",");
-            result.Append(codePostal.Replace(",", " ")).Append(",");
-            result.Append(ville.Replace(",", " ").Replace("\"", "\'")).Append(",");
-            result.Append(nature.Replace(",", " ").ToLowerInvariant()).Append(",");
-            result.Append(rcs.Replace(" ", "")
-                    .Replace("\u00ef", "")
-                    .Replace("\u00bf", "")
-                    .Replace("\u00A0", "")
-                    .Replace("\u00bd", "")).Append(",");
-            result.Append(type.Replace(",", " ").ToLowerInvariant()).Append(",");
-            result.Append(forme.Replace(",", " ").ToLowerInvariant()).Append(",");
-            result.Append(previousP).Append(",");
-            result.Append(previousA);
-            return result.ToString();
+                var forme = "";
+                if (annonce.PersonneMorale != null && annonce.PersonneMorale.Any())
+                {
+                    if (annonce.PersonneMorale.First().FormeJuridique != null)
+                        forme = annonce.PersonneMorale.First().FormeJuridique;
+                }
+
+                // PARUTION,NUMERO,DATE, CODEPOSTAL,VILLE,NATURE,RCS,TYPE,FORMEJURIDIQUE, PREVIOUS_PARUTION,PREVIOUS_NUMERO
+                result.Append(parution).Append(",");
+                result.Append(numeroAnnonce).Append(",");
+                result.Append(date).Append(",");
+                result.Append(codePostal.Replace(",", " ")).Append(",");
+                result.Append(ville.Replace(",", " ").Replace("\"", "\'")).Append(",");
+                result.Append(nature.Replace(",", " ").ToLowerInvariant()).Append(",");
+                result.Append(rcs.Replace(" ", "")
+                        .Replace("\u00ef", "")
+                        .Replace("\u00bf", "")
+                        .Replace("\u00A0", "")
+                        .Replace("\u00bd", "")).Append(",");
+                result.Append(type.Replace(",", " ").ToLowerInvariant()).Append(",");
+                result.Append(forme.Replace(",", " ").ToLowerInvariant()).Append(",");
+                result.Append(previousP).Append(",");
+                result.Append(previousA);
+                yield return result.ToString();
+            }
         }
     }
 }
