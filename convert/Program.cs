@@ -11,7 +11,7 @@ namespace convert
         static void Main(string[] args)
         {
             Dictionary<DateTime, int> buckets = new Dictionary<DateTime, int>();
-            foreach (var line in File.ReadAllLines("queries/insuffisancedactifs.csv").Skip(1))
+            foreach (var line in File.ReadAllLines("ouvertures.csv").Skip(1))
             {
                 var datestr = line.Split(",", StringSplitOptions.RemoveEmptyEntries)[0];
                 if (!DateTime.TryParseExact(datestr, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.NoCurrentDateDefault, out DateTime date))

@@ -56,6 +56,20 @@ services:
     depends_on:
     - postgre
 
+  pgadmin:
+    image: dpage/pgadmin4:6.1
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: regis.portalez@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: macronaugoulag
+      PGADMIN_LISTEN_PORT: 5053
+    ports:
+      - "5053:5053"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    links:
+      - "postgre:pgsql-server"
+
 volumes: 
   pgdata:
   tmp: 

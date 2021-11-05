@@ -5,7 +5,6 @@ SELECT DATE from annonces
     AND DATE <= NOW()
     AND uniteslegales.EFFECTIFS != 'NN'
     AND uniteslegales.EFFECTIFS >= '01'
-    -- filtrer les sociétés civiles immobilières
     AND uniteslegales.CATEGORIEJURIDIQUE != '6540'
     AND uniteslegales.CATEGORIEJURIDIQUE != '6541'
     AND uniteslegales.CATEGORIEJURIDIQUE != '6542'
